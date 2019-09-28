@@ -76,15 +76,18 @@ export class DbService {
     });
   }
 
-  async select<T>(where?: string): Promise<any> {
+  async select<T>(where?: string, withTrashed?: boolean): Promise<any> {
     if (!this.currentTable) {
       console.log('No table selected!');
       return;
     }
     let query = `SELECT * FROM ${this.currentTable}`;
     if (where) {
-      query += ` WHERE ${where} AND deleted_at IS NULL`;
-    } else {
+      query += ` WHERE ${where}`;
+      if (!withTrashed) {
+        query += ' AND deleted_at IS NULL';
+      }
+    } else if (!withTrashed) {
       query += ' WHERE deleted_at IS NULL';
     }
     console.log(query);
@@ -126,7 +129,7 @@ export class DbService {
       return;
     }
 
-    const query = `INSERT INTO ${this.currentTable} (${columns}) VALUES (${values})`;
+    const query = `INSERT INTO ${this.currentTable} (${columns}, created_at) VALUES (${values}, datetime())`;
     console.log(query);
     this.database.executeSql(query, []).catch(e => {
       alert('error ' + JSON.stringify(e));
@@ -134,7 +137,11 @@ export class DbService {
   }
 
   async update(id: number, set: string): Promise<void> {
-    const query = `UPDATE ${this.currentTable} SET ${set}, updated_at = 'datetime()' WHERE id = ${id}`;
+    return this.updateRaw(id, `${set}, updated_at = datetime()`);
+  }
+
+  async updateRaw(id: number, set: string): Promise<void> {
+    const query = `UPDATE ${this.currentTable} SET ${set} WHERE id = ${id}`;
     console.log(query);
     this.database.executeSql(query, []).catch(e => {
       alert('error ' + JSON.stringify(e));
@@ -149,7 +156,7 @@ export class DbService {
     column: string,
     value: string | number | boolean
   ): Promise<void> {
-    const query = `UPDATE ${this.currentTable} SET deleted_at = 'datetime()' WHERE ${column} = ${value}`;
+    const query = `UPDATE ${this.currentTable} SET deleted_at = datetime() WHERE ${column} = ${value}`;
     console.log(query);
     this.database.executeSql(query, []).catch(e => {
       alert('error ' + JSON.stringify(e));

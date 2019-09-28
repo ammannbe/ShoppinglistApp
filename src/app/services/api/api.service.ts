@@ -39,6 +39,7 @@ export class ApiService {
   }
 
   get<T>(url: string): Observable<any> {
+    console.log(`HTTP - GET ${url}`);
     return from(this.queryHeaders()).pipe(
       switchMap(headers => {
         return this.http.get<T>(this.HOST + url, { headers });
@@ -47,6 +48,7 @@ export class ApiService {
   }
 
   post<T>(url: string, data?: object): Observable<T> {
+    console.log(`HTTP - POST ${url}`);
     return from(this.queryHeaders()).pipe(
       switchMap(headers => {
         return this.http.post<T>(this.HOST + url, data, { headers });
@@ -55,6 +57,7 @@ export class ApiService {
   }
 
   patch<T>(url: string, data?: object): Observable<T> {
+    console.log(`HTTP - PATCH ${url}`);
     return from(this.queryHeaders()).pipe(
       switchMap(headers => {
         return this.http.patch<T>(this.HOST + url, data, { headers });
@@ -63,6 +66,7 @@ export class ApiService {
   }
 
   put<T>(url: string, data?: object): Observable<T> {
+    console.log(`HTTP - PUT ${url}`);
     return from(this.queryHeaders()).pipe(
       switchMap(headers => {
         return this.http.put<T>(this.HOST + url, data, { headers });
@@ -71,6 +75,7 @@ export class ApiService {
   }
 
   delete<T>(url: string): Observable<T> {
+    console.log(`HTTP - DELETE ${url}`);
     return from(this.queryHeaders()).pipe(
       switchMap(headers => {
         return this.http.delete<T>(this.HOST + url, { headers });

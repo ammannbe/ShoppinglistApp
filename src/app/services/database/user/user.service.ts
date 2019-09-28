@@ -56,6 +56,8 @@ export class UserService {
 
   async setOfflineOnly(isset: boolean = false): Promise<void> {
     const user = await this.queryUser();
-    await this.db.update(user.id, `offline_only=${(isset ? 1 : 0)}`);
+    if (user) {
+      await this.db.update(user.id, `offline_only=${(isset ? 1 : 0)}`);
+    }
   }
 }

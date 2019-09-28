@@ -15,9 +15,9 @@ export class ShoppingListsService {
     this.db.use(this.table);
   }
 
-  async select(): Promise<ShoppingList[]> {
+  async select(withTrashed: boolean = false): Promise<ShoppingList[]> {
     this.use();
-    return this.db.select<ShoppingList[]>();
+    return this.db.select<ShoppingList[]>(null, withTrashed);
   }
 
   async find(id: number): Promise<ShoppingList> {
@@ -25,18 +25,41 @@ export class ShoppingListsService {
     return this.db.find<ShoppingList>(id);
   }
 
-  async insert(name: string) {
+  findByRemoteId(id: number): Promise<ShoppingList> {
     this.use();
-    this.db.insert('name', `"${name}"`);
+    return this.db.findByRemoteId(id);
   }
 
-  async update(id: number, name: string) {
+  async insert(name: string, remoteId?: number) {
     this.use();
-    this.db.update(id, `name="${name}"`);
+    let values = `"${name}"`;
+    let columns = 'name';
+    if (remoteId) {
+      columns += ', remote_id';
+      values += `, "${remoteId}"`;
+    }
+    this.db.insert(columns, values);
+  }
+
+  async update(id: number, name: string, remote?: ShoppingList) {
+    this.use();
+    let set = `name="${name}"`;
+    if (remote) {
+      set +=
+        `, remote_id="${remote.id}",` +
+        `updated_at="${remote.updated_at}",` +
+        `created_at="${remote.created_at}"`;
+    }
+    this.db.updateRaw(id, set);
   }
 
   async delete(id: number) {
     this.use();
     this.db.delete(id);
+  }
+
+  async forceDelete(id: number) {
+    this.use();
+    this.db.forceDelete(id);
   }
 }

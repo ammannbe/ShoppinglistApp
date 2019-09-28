@@ -57,7 +57,7 @@
       >
         <ion-item-sliding #item>
           <ion-item [routerLink]="keyboardIsVisible ? null : [i.id]">
-            {{ i.name }}
+            {{ i.name }}  -  {{ i.updated_at }}  -  {{ i.created_at }}
           </ion-item>
           <ion-item-options side="end">
             <ion-item-option color="secondary" (click)="showShare(i)">

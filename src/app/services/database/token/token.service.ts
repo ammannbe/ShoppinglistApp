@@ -19,8 +19,9 @@ export class TokenService {
   }
 
   async remove(): Promise<void> {
-    if (await this.queryToken()) {
-      await this.db.forceDelete(this.token.id);
+    const token = await this.queryToken();
+    if (token) {
+      await this.db.forceDelete(token.id);
     }
   }
 
