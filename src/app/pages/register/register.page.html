@@ -1,9 +1,50 @@
 <ion-header>
   <ion-toolbar>
-    <ion-title>register</ion-title>
+    <ion-title>Registrieren</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content>
-
+  <form (ngSubmit)="register()" class="ion-padding">
+    <ion-item>
+      <ion-label position="floating">E-Mail</ion-label>
+      <ion-input
+        required
+        autofocus
+        clear-input
+        type="email"
+        [(ngModel)]="email"
+        name="email"
+      ></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="floating">Password</ion-label>
+      <ion-input
+        required
+        clear-input
+        type="password"
+        [(ngModel)]="password"
+        name="password"
+      ></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="floating">Password bestätigen</ion-label>
+      <ion-input
+        required
+        clear-input
+        type="password"
+        [(ngModel)]="passwordConfirmation"
+        name="passwordConfirmation"
+      ></ion-input>
+    </ion-item>
+    <ion-button type="submit" expand="full" [disabled]="!(password && email)"
+      >Login</ion-button
+    >
+  </form>
+  <ion-content class="ion-padding">
+    <span>
+      Bereits ein Account?<br />
+      <a [routerLink]="['/login']">Logge dich jetzt ein.</a>
+    </span>
+  </ion-content>
 </ion-content>

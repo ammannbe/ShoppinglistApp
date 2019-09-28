@@ -1,9 +1,16 @@
 <ion-header>
   <ion-toolbar>
-    <ion-title>shopping-lists</ion-title>
+    <ion-buttons slot="start">
+      <ion-button (click)="logout()">
+        <ion-icon name="exit"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>Einkaufslisten</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content>
-
+  <ion-button [routerLink]="['/login']">
+    Login
+  </ion-button>
 </ion-content>
