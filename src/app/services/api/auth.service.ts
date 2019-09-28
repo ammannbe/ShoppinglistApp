@@ -2,37 +2,16 @@ import { Injectable } from '@angular/core';
 
 import { Token as LoginToken } from './login/token';
 import { UserService } from '../database/user/user.service';
+import { TokenService } from '../database/token/token.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private token: LoginToken;
-
-  constructor(private dbUser: UserService) {}
+  constructor(private dbUser: UserService, private token: TokenService) {}
 
   async queryToken(): Promise<LoginToken> {
-    console.log('Query auth token');
-    if (this.token) {
-      console.log('...got it from cache!');
-      return this.token;
-    } else if (await this.dbUser.getToken()) {
-      console.log('...got it from storage!');
-      this.token = (await this.dbUser.getToken()) as LoginToken;
-      return this.token;
-    }
-    console.log('...not found!');
-    return;
-  }
-
-  async setToken(token: LoginToken): Promise<void> {
-    this.token = token;
-    this.dbUser.setToken(token);
-  }
-
-  async removeToken(): Promise<void> {
-    this.token = null;
-    this.dbUser.setToken(null);
+    return await this.token.queryToken();
   }
 
   async tokenIsValid(): Promise<boolean> {

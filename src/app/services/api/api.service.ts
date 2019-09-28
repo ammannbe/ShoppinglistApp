@@ -20,7 +20,6 @@ export class ApiService {
   ) {}
 
   hasConnection() {
-    // TODO: Add Api resource to check status
     return true;
   }
 

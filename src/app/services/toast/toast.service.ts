@@ -7,26 +7,41 @@ import { ToastController } from '@ionic/angular';
 export class ToastService {
   constructor(private toastCtrl: ToastController) {}
 
-  async show(message: string): Promise<void> {
+  async show(
+    message: string,
+    duration: number = 3000,
+    position: 'bottom' | 'top' | 'middle' = 'bottom'
+  ): Promise<void> {
     const toast = await this.toastCtrl.create({
       message,
-      duration: 3000,
-      position: 'bottom'
+      duration,
+      position
     });
     toast.present();
   }
 
   async showErrors(err: any): Promise<void> {
-    const errors = err.error.errors;
-    let message = err.error.message;
+    if (err.status === 0) {
+      return this.show(
+        'Upps... Der Server ist zur Zeit nicht erreichbar :-(\n' +
+          'Versuche es später noch einmal.',
+        5000
+      );
+    }
+    const obj = err.error;
+    let message = obj.message;
     let msg: any;
-    for (const [key, error] of Object.entries(errors)) {
-      if (error) {
-        if (msg !== undefined) {
-          msg += `\n${error}`;
-          continue;
+
+    if (obj.errors) {
+      const errors = obj.errors;
+      for (const [key, error] of Object.entries(errors)) {
+        if (error) {
+          if (msg !== undefined) {
+            msg += `\n${error}`;
+            continue;
+          }
+          msg = error;
         }
-        msg = error;
       }
     }
     if (msg !== undefined && message) {

@@ -17,20 +17,11 @@ const routes: Routes = [
           './pages/shopping-lists/shopping-lists.module#ShoppingListsPageModule'
       },
       {
-        path: 'add',
-        loadChildren: './pages/shopping-lists/add/add.module#AddPageModule'
-      },
-      {
         path: ':id',
         children: [
           {
             path: '',
             loadChildren: './pages/items/items.module#ItemsPageModule'
-          },
-          {
-            path: 'edit',
-            loadChildren:
-              './pages/shopping-lists/edit/edit.module#EditPageModule'
           },
           {
             path: 'share',

@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { Token as LoginToken } from './token';
 import { ApiService } from '../api.service';
 import { AuthService } from '../auth.service';
+import { TokenService } from '../../database/token/token.service';
 
 @Injectable({
   providedIn: 'root'
@@ -10,7 +11,11 @@ import { AuthService } from '../auth.service';
 export class LoginService {
   private prefix = '/auth';
 
-  constructor(private api: ApiService, private auth: AuthService) {}
+  constructor(
+    private api: ApiService,
+    private auth: AuthService,
+    private token: TokenService
+  ) {}
 
   async login(email: string, password: string): Promise<void> {
     await this.logout();
@@ -18,18 +23,18 @@ export class LoginService {
     const token = await this.api
       .post<LoginToken>(`${this.prefix}/login`, { email, password })
       .toPromise();
-    await this.auth.setToken(token);
+    await this.token.insert(token);
   }
 
   async logout(): Promise<void> {
     await this.api.post(`${this.prefix}/logout`);
-    await this.auth.removeToken();
+    await this.token.remove();
   }
 
   async refresh(): Promise<void> {
     const token = await this.api
       .post<LoginToken>(`${this.prefix}/refresh`)
       .toPromise();
-    await this.auth.setToken(token);
+    await this.token.insert(token);
   }
 }

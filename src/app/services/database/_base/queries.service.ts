@@ -5,10 +5,12 @@ import { Injectable } from '@angular/core';
 })
 export class QueriesService {
   private create = 'CREATE TABLE IF NOT EXISTS';
+  private drop = 'DROP TABLE';
 
   constructor() {}
 
-  users(): string {
+  user(): string {
+    // return `${this.drop} user`; // For debugging only
     return (
       this.create +
       ' user ' +
@@ -17,12 +19,32 @@ export class QueriesService {
       'email varchar(255),' +
       'password varchar(255),' +
       'token varchar(255),' +
-      'offline_only TINYINT(1)' +
+      'offline_only TINYINT(1),' +
+      'created_at TIMESTMAP,' +
+      'updated_at TIMESTMAP,' +
+      'deleted_at TIMESTAMP' +
+      ')'
+    );
+  }
+
+  token(): string {
+    // return `${this.drop} token`; // For debugging only
+    return (
+      this.create +
+      ' token ' +
+      '(' +
+      'token varchar(255),' +
+      'created_at TIMESTMAP,' +
+      'expires_at TIMESTMAP,' +
+      'issued_at TIMESTMAP,' +
+      'updated_at TIMESTMAP,' +
+      'deleted_at TIMESTAMP' +
       ')'
     );
   }
 
   shoppingLists(): string {
+    // return `${this.drop} shopping_lists`; // For debugging only
     return (
       this.create +
       ' shopping_lists ' +
@@ -38,6 +60,7 @@ export class QueriesService {
   }
 
   products(): string {
+    // return `${this.drop} products`; // For debugging only
     return (
       this.create +
       ' products ' +
@@ -54,6 +77,7 @@ export class QueriesService {
   }
 
   units(): string {
+    // return `${this.drop} units`; // For debugging only
     return (
       this.create +
       ' units ' +
@@ -70,6 +94,7 @@ export class QueriesService {
   }
 
   items(): string {
+    // return `${this.drop} items`; // For debugging only
     return (
       this.create +
       ' items ' +

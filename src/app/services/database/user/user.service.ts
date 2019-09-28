@@ -38,19 +38,6 @@ export class UserService {
     }
   }
 
-  async getToken(): Promise<Token> {
-    const user = await this.queryUser();
-    if (user) {
-      return user.token;
-    }
-    return null;
-  }
-
-  async setToken(token: Token): Promise<void> {
-    const user = await this.queryUser();
-    this.db.update(user.id, `token='${JSON.stringify(token)}'`);
-  }
-
   async getEmail(): Promise<string> {
     const user = await this.queryUser();
     if (user) {

@@ -51,25 +51,28 @@ export class DbService {
         this.createTables();
       })
       .catch(e => {
-        alert('error ' + JSON.stringify(e));
+        alert('error createDB ' + JSON.stringify(e));
       });
   }
 
   async createTables(): Promise<void> {
-    this.database.executeSql(this.queries.users(), []).catch(e => {
-      alert('error ' + JSON.stringify(e));
+    this.database.executeSql(this.queries.user(), []).catch(e => {
+      alert('error; createTables; user ' + JSON.stringify(e));
+    });
+    this.database.executeSql(this.queries.token(), []).catch(e => {
+      alert('error; createTables; token ' + JSON.stringify(e));
     });
     this.database.executeSql(this.queries.shoppingLists(), []).catch(e => {
-      alert('error ' + JSON.stringify(e));
+      alert('error; createTables; shoppingLists ' + JSON.stringify(e));
     });
     this.database.executeSql(this.queries.products(), []).catch(e => {
-      alert('error ' + JSON.stringify(e));
+      alert('error; createTables; products ' + JSON.stringify(e));
     });
     this.database.executeSql(this.queries.units(), []).catch(e => {
-      alert('error ' + JSON.stringify(e));
+      alert('error; createTables; units ' + JSON.stringify(e));
     });
     this.database.executeSql(this.queries.items(), []).catch(e => {
-      alert('error ' + JSON.stringify(e));
+      alert('error; createTables; items ' + JSON.stringify(e));
     });
   }
 
@@ -80,7 +83,9 @@ export class DbService {
     }
     let query = `SELECT * FROM ${this.currentTable}`;
     if (where) {
-      query += ` WHERE ${where}`;
+      query += ` WHERE ${where} AND deleted_at IS NULL`;
+    } else {
+      query += ' WHERE deleted_at IS NULL';
     }
     console.log(query);
     return this.database
@@ -129,7 +134,7 @@ export class DbService {
   }
 
   async update(id: number, set: string): Promise<void> {
-    const query = `UPDATE ${this.currentTable} SET ${set} WHERE id = ${id}`;
+    const query = `UPDATE ${this.currentTable} SET ${set}, updated_at = 'datetime()' WHERE id = ${id}`;
     console.log(query);
     this.database.executeSql(query, []).catch(e => {
       alert('error ' + JSON.stringify(e));
@@ -144,7 +149,7 @@ export class DbService {
     column: string,
     value: string | number | boolean
   ): Promise<void> {
-    const query = `UPDATE ${this.currentTable} SET deleted_at = current_timestamp() WHERE ${column} = ${value}`;
+    const query = `UPDATE ${this.currentTable} SET deleted_at = 'datetime()' WHERE ${column} = ${value}`;
     console.log(query);
     this.database.executeSql(query, []).catch(e => {
       alert('error ' + JSON.stringify(e));

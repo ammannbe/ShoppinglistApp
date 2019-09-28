@@ -6,11 +6,81 @@
       </ion-button>
     </ion-buttons>
     <ion-title>Einkaufslisten</ion-title>
+    <ion-buttons slot="end">
+      <ion-button *ngIf="!showAddInput" (click)="showAdd()">
+        <ion-icon name="add"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
 <ion-content>
-  <ion-button [routerLink]="['/login']">
-    Login
-  </ion-button>
+  <ion-refresher slot="fixed" (ionRefresh)="showAddThroughPullEvent($event)">
+    <ion-refresher-content
+      pulling-icon=""
+      pulling-text=""
+      refreshing-spinner=""
+      refreshing-text=""
+    ></ion-refresher-content>
+  </ion-refresher>
+
+  <form (submit)="add()" *ngIf="showAddInput && !showEditInput">
+    <ion-item-divider class="input-item">
+      <ion-input
+        #autofocus
+        placeholder="Name eingeben..."
+        [(ngModel)]="name"
+        name="name"
+      ></ion-input>
+      <ion-icon name="checkmark" (click)="add()"></ion-icon>
+    </ion-item-divider>
+  </form>
+
+  <form (submit)="edit()" *ngIf="showEditInput && !showAddInput">
+    <ion-item-divider class="input-item">
+      <ion-input
+        #autofocus
+        value="name"
+        [(ngModel)]="name"
+        name="name"
+      ></ion-input>
+      <ion-icon name="checkmark" (click)="edit()"></ion-icon>
+    </ion-item-divider>
+  </form>
+
+  <ion-list>
+    <div *ngFor="let i of shoppingLists">
+      <ion-item-divider
+        *ngIf="i?.id !== shoppingList?.id"
+        class="list-entry"
+        (ionSwipe)="remove(i)"
+      >
+        <ion-item-sliding #item>
+          <ion-item [routerLink]="keyboardIsVisible ? null : [i.id]">
+            {{ i.name }}
+          </ion-item>
+          <ion-item-options side="end">
+            <ion-item-option color="secondary" (click)="showShare(i)">
+              <ion-icon name="person-add"></ion-icon>
+            </ion-item-option>
+            <ion-item-option color="primary" (click)="showEdit(i)">
+              <ion-icon name="create"></ion-icon>
+            </ion-item-option>
+            <ion-item-option color="danger" expandable (click)="remove(i)">
+              <ion-icon name="trash"></ion-icon>
+            </ion-item-option>
+          </ion-item-options>
+        </ion-item-sliding>
+      </ion-item-divider>
+    </div>
+  </ion-list>
+
+  <div class="ion-padding" *ngIf="!shoppingLists?.length">
+    <span class="empty-list">
+      Hier sieht's ja ziemlich leer aus...<br />
+      Füge neue Einkaufslisten durch nach unten ziehen oder mit dem "+"-Knopf
+      hinzu.<br /><br />
+      Tipp: Wische nach links, um die Liste wieder zu löschen oder bearbeiten.
+    </span>
+  </div>
 </ion-content>
