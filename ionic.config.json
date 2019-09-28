@@ -1,5 +1,7 @@
 {
   "name": "ShoppingListApp",
-  "integrations": {},
+  "integrations": {
+    "cordova": {}
+  },
   "type": "angular"
 }
