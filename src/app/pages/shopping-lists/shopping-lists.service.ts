@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
 
 import { ShoppingListsService as DbShoppingListService } from '../../services/database/shopping-lists/shopping-lists.service';
 import { ShoppingListsService as ApiShoppingListService } from '../../services/api/shopping-lists/shopping-lists.service';
+import { ApiService } from 'src/app/services/api/api.service';
 import { ShoppingList } from './shopping-list';
-import { Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -12,6 +13,7 @@ export class ShoppingListsService {
   private syncIsRunning = false;
 
   constructor(
+    private apiService: ApiService,
     private dbShoppingList: DbShoppingListService,
     private apiShoppingList: ApiShoppingListService
   ) {}
@@ -49,12 +51,20 @@ export class ShoppingListsService {
   }
 
   async sync(): Promise<void> {
-    this.syncIsRunning = true;
-    const localShoppingLists = await this.dbShoppingList.select(true);
-    const remoteShoppingLists = await this.apiShoppingList.index().toPromise();
+    const hasConnection = await this.apiService.hasConnection();
+    if (hasConnection.status !== 418) {
+      console.log('No connection.');
+      return;
+    }
 
-    await this.syncLocalToRemote(localShoppingLists, remoteShoppingLists);
-    await this.syncRemoteToLocal(remoteShoppingLists, localShoppingLists);
+    this.syncIsRunning = true;
+    const localSL1 = await this.dbShoppingList.select(true);
+    const remoteSL1 = await this.apiShoppingList.index().toPromise();
+    await this.syncLocalToRemote(localSL1, remoteSL1);
+
+    const localSL2 = await this.dbShoppingList.select(true);
+    const remoteSL2 = await this.apiShoppingList.index().toPromise();
+    await this.syncRemoteToLocal(remoteSL2, localSL2);
     this.syncIsRunning = false;
   }
 
@@ -62,6 +72,9 @@ export class ShoppingListsService {
     localShoppingLists: ShoppingList[],
     remoteShoppingLists: ShoppingList[]
   ) {
+    if (!localShoppingLists.length) {
+      return;
+    }
     for (const shoppingList of localShoppingLists) {
       if (!shoppingList.remote_id && !shoppingList.deleted_at) {
         const tmpS = await this.apiShoppingList
@@ -101,14 +114,15 @@ export class ShoppingListsService {
     remoteShoppingLists: ShoppingList[],
     localShoppingLists: ShoppingList[]
   ) {
+    if (!remoteShoppingLists.length) {
+      return;
+    }
     for (const shoppingList of remoteShoppingLists) {
       const found = localShoppingLists.find(o => {
         return o.remote_id === shoppingList.id;
       });
       if (found) {
         let name = shoppingList.name;
-        console.log(found.updated_at);
-        console.log(shoppingList.updated_at);
         if (found.updated_at > shoppingList.updated_at) {
           name = found.name;
         }

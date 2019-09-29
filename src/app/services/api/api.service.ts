@@ -14,13 +14,18 @@ export class ApiService {
   public HOST = 'http://10.0.0.162:8000';
   private token: LoginToken;
 
-  constructor(
-    private http: HttpClient,
-    private auth: AuthService
-  ) {}
+  constructor(private http: HttpClient, private auth: AuthService) {}
 
-  hasConnection() {
-    return true;
+  async hasConnection(): Promise<any> {
+    return await this.http
+      .get(this.HOST + '/im-a-teapot')
+      .toPromise()
+      .then(data => {
+        return data;
+      })
+      .catch(err => {
+        return err;
+      });
   }
 
   async queryHeaders(): Promise<HttpHeaders> {
@@ -48,7 +53,7 @@ export class ApiService {
   }
 
   post<T>(url: string, data?: object): Observable<T> {
-    console.log(`HTTP - POST ${url}`);
+    console.log(`HTTP - POST ${url} - ${JSON.stringify(data)}`);
     return from(this.queryHeaders()).pipe(
       switchMap(headers => {
         return this.http.post<T>(this.HOST + url, data, { headers });
@@ -57,7 +62,7 @@ export class ApiService {
   }
 
   patch<T>(url: string, data?: object): Observable<T> {
-    console.log(`HTTP - PATCH ${url}`);
+    console.log(`HTTP - PATCH ${url} - ${JSON.stringify(data)}`);
     return from(this.queryHeaders()).pipe(
       switchMap(headers => {
         return this.http.patch<T>(this.HOST + url, data, { headers });
@@ -66,7 +71,7 @@ export class ApiService {
   }
 
   put<T>(url: string, data?: object): Observable<T> {
-    console.log(`HTTP - PUT ${url}`);
+    console.log(`HTTP - PUT ${url} - ${JSON.stringify(data)}`);
     return from(this.queryHeaders()).pipe(
       switchMap(headers => {
         return this.http.put<T>(this.HOST + url, data, { headers });
