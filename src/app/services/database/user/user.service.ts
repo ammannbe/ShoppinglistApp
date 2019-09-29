@@ -16,7 +16,7 @@ export class UserService {
     if (this.user) {
       return this.user;
     } else {
-      return await this.db.first<User>() as User;
+      return await this.db.first<User>();
     }
   }
 
@@ -57,7 +57,7 @@ export class UserService {
   async setOfflineOnly(isset: boolean = false): Promise<void> {
     const user = await this.queryUser();
     if (user) {
-      await this.db.update(user.id, `offline_only=${(isset ? 1 : 0)}`);
+      await this.db.update(user.id, `offline_only=${isset ? 1 : 0}`);
     }
   }
 }

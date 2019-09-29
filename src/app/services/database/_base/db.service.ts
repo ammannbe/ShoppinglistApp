@@ -76,7 +76,7 @@ export class DbService {
     });
   }
 
-  async select<T>(where?: string, withTrashed?: boolean): Promise<any> {
+  async select<T>(where?: string, withTrashed?: boolean): Promise<T[]> {
     if (!this.currentTable) {
       console.log('No table selected!');
       return;
@@ -102,23 +102,20 @@ export class DbService {
           }
         }
         return mapped;
-      })
-      .catch(e => {
-        alert('error ' + JSON.stringify(e));
       });
   }
 
-  async find<T>(id: number): Promise<any> {
+  async find<T>(id: number): Promise<T> {
     const data = await this.select<T>(`id = ${id}`);
     return data[0];
   }
 
-  async first<T>(): Promise<any> {
+  async first<T>(): Promise<T> {
     const data = await this.select<T>();
     return data[0];
   }
 
-  async findByRemoteId<T>(id: number): Promise<any> {
+  async findByRemoteId<T>(id: number): Promise<T> {
     const data = await this.select<T>(`remote_id = ${id}`);
     return data[0];
   }

@@ -17,7 +17,7 @@ export class ShoppingListsService {
 
   async select(withTrashed: boolean = false): Promise<ShoppingList[]> {
     this.use();
-    return this.db.select<ShoppingList[]>(null, withTrashed);
+    return this.db.select<ShoppingList>(null, withTrashed);
   }
 
   async find(id: number): Promise<ShoppingList> {
@@ -27,10 +27,10 @@ export class ShoppingListsService {
 
   findByRemoteId(id: number): Promise<ShoppingList> {
     this.use();
-    return this.db.findByRemoteId(id);
+    return this.db.findByRemoteId<ShoppingList>(id);
   }
 
-  async insert(name: string, remoteId?: number) {
+  async insert(name: string, remoteId?: number): Promise<void> {
     this.use();
     let values = `"${name}"`;
     let columns = 'name';
@@ -41,7 +41,7 @@ export class ShoppingListsService {
     this.db.insert(columns, values);
   }
 
-  async update(id: number, name: string, remote?: ShoppingList) {
+  async update(id: number, name: string, remote?: ShoppingList): Promise<void> {
     this.use();
     let set = `name="${name}"`;
     if (remote) {
@@ -53,12 +53,12 @@ export class ShoppingListsService {
     this.db.updateRaw(id, set);
   }
 
-  async delete(id: number) {
+  async delete(id: number): Promise<void> {
     this.use();
     this.db.delete(id);
   }
 
-  async forceDelete(id: number) {
+  async forceDelete(id: number): Promise<void> {
     this.use();
     this.db.forceDelete(id);
   }

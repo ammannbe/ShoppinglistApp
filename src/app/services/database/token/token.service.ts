@@ -30,7 +30,7 @@ export class TokenService {
     if (this.token) {
       return this.token;
     } else {
-      return this.token = await this.db.first<Token>() as Token;
+      return this.token = await this.db.first<Token>();
     }
   }
 }
