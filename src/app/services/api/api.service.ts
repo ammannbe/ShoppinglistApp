@@ -16,7 +16,7 @@ export class ApiService {
 
   constructor(private http: HttpClient, private auth: AuthService) {}
 
-  async hasConnection(): Promise<any> {
+  async checkConnection(): Promise<any> {
     return await this.http
       .get(this.HOST + '/im-a-teapot')
       .toPromise()
