@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { Token } from '../../api/login/token';
-import { User } from 'src/app/pages/user/user';
+
 import { DbService } from '../_base/db.service';
+import { User } from './user';
 
 @Injectable({
   providedIn: 'root'
@@ -25,15 +25,20 @@ export class UserService {
     password: string,
     offlineOnly: boolean
   ): Promise<boolean> {
-    console.log(await this.queryUser());
     if (await this.queryUser()) {
       return false;
     } else {
       this.db.use('user');
-      await this.db.insert(
-        'email, password, offline_only',
-        `"${email}", "${password}", "${offlineOnly}"`
-      );
+      const user: User = {
+        id: null,
+        email,
+        password,
+        offline_only: offlineOnly,
+        created_at: null,
+        updated_at: null,
+        deleted_at: null,
+      };
+      await this.db.insert(user);
       return true;
     }
   }
@@ -49,7 +54,7 @@ export class UserService {
   async offlineOny(): Promise<boolean> {
     const user = await this.queryUser();
     if (user) {
-      return user.offline_only;
+      return !!user.offline_only;
     }
     return null;
   }
@@ -57,7 +62,7 @@ export class UserService {
   async setOfflineOnly(isset: boolean = false): Promise<void> {
     const user = await this.queryUser();
     if (user) {
-      await this.db.update(user.id, `offline_only=${isset ? 1 : 0}`);
+      await this.db.update(user.id, { offline_only: isset });
     }
   }
 }

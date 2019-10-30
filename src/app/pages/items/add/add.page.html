@@ -1,9 +1,105 @@
 <ion-header>
   <ion-toolbar>
-    <ion-title>add</ion-title>
+    <ion-buttons slot="start">
+      <ion-back-button
+        defaultHref="/shopping-lists/{{ shoppingList?.id }}"
+      ></ion-back-button>
+    </ion-buttons>
+    <ion-title>Eintrag hinzufügen</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="add()">
+        <ion-icon name="save"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
 <ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="reload($event, true)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
 
+  <form (submit)="add()">
+    <ion-grid>
+      <ion-row>
+        <ion-col size="2">
+          <ion-item>
+            <ion-input
+              type="number"
+              placeholder="..."
+              [(ngModel)]="amount"
+              name="amount"
+              min="0"
+              max="999999"
+            ></ion-input>
+          </ion-item>
+        </ion-col>
+        <ion-col size="3">
+          <ion-item>
+            <ion-select *ngIf="units?.length" [(ngModel)]="unit" name="unit">
+              <ion-select-option value="" selected>x</ion-select-option>
+              <ion-select-option *ngFor="let u of units" value="{{ u.name }}">
+                {{ u.name }}
+              </ion-select-option>
+            </ion-select>
+            <ion-select *ngIf="!units?.length" [(ngModel)]="unit" name="unit">
+              <ion-select-option value="" selected>x</ion-select-option>
+              <ion-select-option value="m">m</ion-select-option>
+              <ion-select-option value="kg">kg</ion-select-option>
+              <ion-select-option value="l">l</ion-select-option>
+            </ion-select>
+          </ion-item>
+        </ion-col>
+        <ion-col>
+          <ion-item>
+            <ion-input
+              #autofocus
+              type="text"
+              placeholder="Produkt eingeben..."
+              [(ngModel)]="product"
+              name="product"
+              minlength="1"
+              maxlength="255"
+              autofocus
+              required
+              (input)="searchProduct($event.target.value)"
+            ></ion-input>
+          </ion-item>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </form>
+
+  <div class="ion-padding" *ngIf="!productsSearch?.length">
+    <span class="empty-list">Keine Produkte gefunden.</span>
+  </div>
+  <ion-list *ngIf="productsSearch?.length">
+    <div *ngFor="let product of productsSearch">
+      <ion-item-divider class="list-entry" (ionSwipe)="removeProduct(product)">
+        <ion-item-sliding #item>
+          <ion-item>
+            {{ product.name }}
+          </ion-item>
+          <ion-item-options side="end">
+            <ion-item-option
+              color="danger"
+              expandable
+              (click)="removeProduct(product)"
+            >
+              <ion-icon name="trash"></ion-icon>
+            </ion-item-option>
+          </ion-item-options>
+        </ion-item-sliding>
+      </ion-item-divider>
+    </div>
+  </ion-list>
+
+  <div class="ion-padding" *ngIf="!products?.length">
+    <span class="empty-list">
+      Hier sieht's etwas leer aus...<br />
+      Tippe oben ein Produkt ein, um es in der Liste hinzu zufügen.
+      <br /><br />
+      Tipp: Wische nach links, um Proukte wieder zu löschen oder zu bearbeiten.
+    </span>
+  </div>
 </ion-content>

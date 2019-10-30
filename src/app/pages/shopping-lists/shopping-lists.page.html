@@ -7,21 +7,16 @@
     </ion-buttons>
     <ion-title>Einkaufslisten</ion-title>
     <ion-buttons slot="end">
-      <ion-button (click)="reload()">
-        <ion-icon name="refresh"></ion-icon>
+      <ion-button (click)="showAdd()">
+        <ion-icon name="add"></ion-icon>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
 <ion-content>
-  <ion-refresher slot="fixed" (ionRefresh)="showAddThroughPullEvent($event)">
-    <ion-refresher-content
-      pulling-icon=""
-      pulling-text=""
-      refreshing-spinner=""
-      refreshing-text=""
-    ></ion-refresher-content>
+  <ion-refresher slot="fixed" (ionRefresh)="reload($event, true)">
+    <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
 
   <form (submit)="add()" *ngIf="showAddInput && !showEditInput">
@@ -57,7 +52,13 @@
       >
         <ion-item-sliding #item>
           <ion-item [routerLink]="keyboardIsVisible ? null : [i.id]">
-            {{ i.name }}
+            <ion-label class="ion-text-wrap">
+              {{ i.name }}
+              <br />
+              <small *ngIf="user?.email !== i.owner_email">
+                {{ i.owner_email }}
+              </small>
+            </ion-label>
           </ion-item>
           <ion-item-options side="end">
             <ion-item-option color="secondary" (click)="showShare(i)">
@@ -75,12 +76,13 @@
     </div>
   </ion-list>
 
-  <div class="ion-padding" *ngIf="!shoppingLists?.length">
+  <div class="ion-padding" *ngIf="!hasShoppingLists">
     <span class="empty-list">
-      Hier sieht's ja ziemlich leer aus...<br />
-      Füge neue Einkaufslisten durch nach unten ziehen oder mit dem "+"-Knopf
-      hinzu.<br /><br />
-      Tipp: Wische nach links, um die Liste wieder zu löschen oder bearbeiten.
+      Hier sieht's etwas leer aus...<br />
+      Füge neue Einkaufslisten mit dem "+"-Knopf hinzu.
+      <br /><br />
+      Tipp: Wische nach links, um die Liste wieder zu löschen oder zu
+      bearbeiten.
     </span>
   </div>
 </ion-content>

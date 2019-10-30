@@ -12,25 +12,20 @@ export class TokenService {
 
   async insert(token: Token): Promise<void> {
     this.db.use('token');
-    await this.db.insert(
-      'token, expires_at, issued_at',
-      `"${token.token}", "${token.expires_at}", "${token.issued_at}"`
-    );
+    await this.db.insert(token);
   }
 
   async remove(): Promise<void> {
-    const token = await this.queryToken();
-    if (token) {
-      await this.db.forceDelete(token.id);
-    }
+    this.db.use('token');
+    await this.db.truncate();
   }
 
   async queryToken(): Promise<Token> {
-    this.db.use('token');
     if (this.token) {
       return this.token;
     } else {
-      return this.token = await this.db.first<Token>();
+      this.db.use('token');
+      return (this.token = await this.db.first<Token>());
     }
   }
 }

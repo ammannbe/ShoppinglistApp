@@ -1,10 +1,8 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
 
 import { ShoppingListsService as DbShoppingListService } from '../../services/database/shopping-lists/shopping-lists.service';
-import { ShoppingListsService as ApiShoppingListService } from '../../services/api/shopping-lists/shopping-lists.service';
-import { ShoppingList } from './shopping-list';
-import { SyncService } from 'src/app/services/api/sync.service';
+import { SyncService } from './sync.service';
+import { ShoppingList } from 'src/app/services/database/shopping-lists/shopping-list';
 
 @Injectable({
   providedIn: 'root'
@@ -12,34 +10,31 @@ import { SyncService } from 'src/app/services/api/sync.service';
 export class ShoppingListsService {
   constructor(
     private syncService: SyncService,
-    private dbShoppingList: DbShoppingListService,
-    private apiShoppingList: ApiShoppingListService
-  ) {
-    this.syncService.setServices(this.dbShoppingList, this.apiShoppingList);
-    this.syncService.setAttributes(['name']);
+    private dbShoppingList: DbShoppingListService
+  ) {}
+
+  async find(id: number): Promise<ShoppingList> {
+    await this.syncService.sync();
+    return this.dbShoppingList.find(id);
   }
 
-  async index(): Promise<ShoppingList[]> {
-    await this.syncService.sync();
+  async index(forceSync: boolean = false): Promise<ShoppingList[]> {
+    await this.syncService.sync(forceSync);
     return this.dbShoppingList.select();
   }
 
-  async insert(name: string): Promise<void> {
-    await this.dbShoppingList.insert(name);
+  async insert(shoppingList: ShoppingList): Promise<void> {
+    await this.dbShoppingList.insert(shoppingList);
     await this.syncService.sync();
   }
 
-  async update(id: number, name: string): Promise<void> {
-    await this.dbShoppingList.update(id, name);
+  async update(id: number, shoppingList: ShoppingList): Promise<void> {
+    await this.dbShoppingList.update(id, shoppingList);
     await this.syncService.sync();
   }
 
   async destroy(id: number): Promise<void> {
-    await this.syncService.sync();
     await this.dbShoppingList.delete(id);
-  }
-
-  share(id: number, email: string): Observable<any> {
-    return this.apiShoppingList.share(id, email);
+    await this.syncService.sync();
   }
 }

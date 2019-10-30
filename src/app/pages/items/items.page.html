@@ -1,11 +1,100 @@
 <ion-header>
   <ion-toolbar>
-    <ion-title>items</ion-title>
+    <ion-buttons slot="start">
+      <ion-button [routerLink]="['/shopping-lists']">
+        <ion-icon name="home"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>{{ shoppingList?.name }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button [routerLink]="['items', 'add']">
+        <ion-icon name="add"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
 <ion-content>
-  <ion-button [routerLink]="['/login']">
-    Login
-  </ion-button>
+  <ion-refresher slot="fixed" (ionRefresh)="reload($event, true)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <ion-list *ngIf="itemsUndone?.length">
+    <div *ngFor="let itemUndone of itemsUndone">
+      <ion-item-divider class="list-entry" (ionSwipe)="remove(itemUndone)">
+        <ion-item-sliding #item>
+          <ion-item (click)="keyboardIsVisible ? null : done(itemUndone)">
+            <div>
+              <small>
+                {{ itemUndone.amount || '' }} {{ itemUndone.unit_name || '' }}
+              </small>
+              {{ itemUndone.product_name }}
+            </div>
+          </ion-item>
+          <ion-item-options side="end">
+            <ion-item-option
+              color="primary"
+              [routerLink]="['/items', itemUndone.id, 'edit']"
+            >
+              <ion-icon name="create"></ion-icon>
+            </ion-item-option>
+            <ion-item-option
+              color="danger"
+              expandable
+              (click)="remove(itemUndone)"
+            >
+              <ion-icon name="trash"></ion-icon>
+            </ion-item-option>
+          </ion-item-options>
+        </ion-item-sliding>
+      </ion-item-divider>
+    </div>
+  </ion-list>
+
+  <ion-list *ngIf="itemsDone?.length">
+    <ion-list-header>
+      <ion-label>
+        <b><u>Erledigte Einkäufe</u></b>
+      </ion-label>
+    </ion-list-header>
+    <div *ngFor="let itemDone of itemsDone">
+      <ion-item-divider class="list-entry" (ionSwipe)="remove(itemDone)">
+        <ion-item-sliding #item>
+          <ion-item (click)="keyboardIsVisible ? null : undone(itemDone)">
+            <del>
+              <small>
+                {{ itemDone.amount || '' }} {{ itemDone.unit_name || '' }}
+              </small>
+              {{ itemDone.product_name }}
+            </del>
+          </ion-item>
+          <ion-item-options side="end">
+            <ion-item-option
+              color="primary"
+              [routerLink]="['/items', itemDone.id, 'edit']"
+            >
+              <ion-icon name="create"></ion-icon>
+            </ion-item-option>
+            <ion-item-option
+              color="danger"
+              expandable
+              (click)="remove(itemDone)"
+            >
+              <ion-icon name="trash"></ion-icon>
+            </ion-item-option>
+          </ion-item-options>
+        </ion-item-sliding>
+      </ion-item-divider>
+    </div>
+  </ion-list>
+
+  <div class="ion-padding" *ngIf="!hasItems">
+    <span class="empty-list">
+      Hier sieht's etwas leer aus...<br />
+      Füge neue Einträge mit dem "+"-Knopf hinzu.
+      <br /><br />
+      Tipp: Wische nach links, um den Eintrag wieder zu löschen oder zu
+      bearbeiten.
+    </span>
+  </div>
 </ion-content>

@@ -24,11 +24,6 @@ const routes: Routes = [
             loadChildren: './pages/items/items.module#ItemsPageModule'
           },
           {
-            path: 'share',
-            loadChildren:
-              './pages/shopping-lists/share/share.module#SharePageModule'
-          },
-          {
             path: 'items',
             children: [
               {
@@ -42,42 +37,8 @@ const routes: Routes = [
     ]
   },
   {
-    path: 'itmes/:id/edit',
+    path: 'items/:id/edit',
     loadChildren: './pages/items/edit/edit.module#EditPageModule'
-  },
-  {
-    path: 'units',
-    children: [
-      {
-        path: '',
-        loadChildren: './pages/units/units.module#UnitsPageModule'
-      },
-      {
-        path: 'add',
-        loadChildren: './pages/units/add/add.module#AddPageModule'
-      },
-      {
-        path: ':id/edit',
-        loadChildren: './pages/units/edit/edit.module#EditPageModule'
-      }
-    ]
-  },
-  {
-    path: 'products',
-    children: [
-      {
-        path: '',
-        loadChildren: './pages/products/products.module#ProductsPageModule'
-      },
-      {
-        path: 'add',
-        loadChildren: './pages/products/add/add.module#AddPageModule'
-      },
-      {
-        path: ':id/edit',
-        loadChildren: './pages/products/edit/edit.module#EditPageModule'
-      }
-    ]
   },
   {
     path: 'user',

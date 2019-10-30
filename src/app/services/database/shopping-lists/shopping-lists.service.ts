@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 
 import { DbService } from '../_base/db.service';
-import { ShoppingList } from 'src/app/pages/shopping-lists/shopping-list';
+import { ShoppingList } from './shopping-list';
 
 @Injectable({
   providedIn: 'root'
@@ -15,6 +15,10 @@ export class ShoppingListsService {
     this.db.use(this.table);
   }
 
+  private isRemote(shoppingList: ShoppingList) {
+    return !shoppingList.remote_id ? false : true;
+  }
+
   async select(withTrashed: boolean = false): Promise<ShoppingList[]> {
     this.use();
     return this.db.select<ShoppingList>(null, withTrashed);
@@ -25,32 +29,19 @@ export class ShoppingListsService {
     return this.db.find<ShoppingList>(id);
   }
 
-  findByRemoteId(id: number): Promise<ShoppingList> {
+  async findByRemoteId(id: number): Promise<ShoppingList> {
     this.use();
     return this.db.findByRemoteId<ShoppingList>(id);
   }
 
-  async insert(name: string, remoteId?: number): Promise<void> {
+  async insert(shoppingList: ShoppingList): Promise<void> {
     this.use();
-    let values = `"${name}"`;
-    let columns = 'name';
-    if (remoteId) {
-      columns += ', remote_id';
-      values += `, "${remoteId}"`;
-    }
-    this.db.insert(columns, values);
+    this.db.insert(shoppingList, !this.isRemote(shoppingList));
   }
 
-  async update(id: number, name: string, remote?: ShoppingList): Promise<void> {
+  async update(id: number, shoppingList: ShoppingList): Promise<void> {
     this.use();
-    let set = `name="${name}"`;
-    if (remote) {
-      set +=
-        `, remote_id="${remote.id}",` +
-        `updated_at="${remote.updated_at}",` +
-        `created_at="${remote.created_at}"`;
-    }
-    this.db.updateRaw(id, set);
+    this.db.update(id, shoppingList, !this.isRemote(shoppingList));
   }
 
   async delete(id: number): Promise<void> {
@@ -61,5 +52,10 @@ export class ShoppingListsService {
   async forceDelete(id: number): Promise<void> {
     this.use();
     this.db.forceDelete(id);
+  }
+
+  async truncate(): Promise<void> {
+    this.use();
+    this.db.truncate();
   }
 }

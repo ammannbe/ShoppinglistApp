@@ -11,7 +11,7 @@ import { Token as LoginToken } from './login/token';
   providedIn: 'root'
 })
 export class ApiService {
-  public HOST = 'http://10.0.0.162:8000';
+  public HOST = 'https://shoppinglist-api.narrenhaus.ch';
   private token: LoginToken;
 
   constructor(private http: HttpClient, private auth: AuthService) {}

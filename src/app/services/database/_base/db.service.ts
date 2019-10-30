@@ -34,6 +34,13 @@ export class DbService {
     }
   }
 
+  private async query(query: string): Promise<any> {
+    console.log(query);
+    return this.database.executeSql(query, []).catch(e => {
+      alert(`Error executing query:\n${query}\nError:\n` + JSON.stringify(e));
+    });
+  }
+
   async createDB(): Promise<void> {
     this.sqlite
       .create({
@@ -42,12 +49,6 @@ export class DbService {
       })
       .then((db: SQLiteObject) => {
         this.database = db;
-        // // NOTE: drop table for test purposes
-        // this.database.executeSql('DROP TABLE todoitems').then((result) => {
-        //   console.log('dropped');
-        // }).catch((err) => {
-        //   alert(err);
-        // });
         this.createTables();
       })
       .catch(e => {
@@ -56,24 +57,12 @@ export class DbService {
   }
 
   async createTables(): Promise<void> {
-    this.database.executeSql(this.queries.user(), []).catch(e => {
-      alert('error; createTables; user ' + JSON.stringify(e));
-    });
-    this.database.executeSql(this.queries.token(), []).catch(e => {
-      alert('error; createTables; token ' + JSON.stringify(e));
-    });
-    this.database.executeSql(this.queries.shoppingLists(), []).catch(e => {
-      alert('error; createTables; shoppingLists ' + JSON.stringify(e));
-    });
-    this.database.executeSql(this.queries.products(), []).catch(e => {
-      alert('error; createTables; products ' + JSON.stringify(e));
-    });
-    this.database.executeSql(this.queries.units(), []).catch(e => {
-      alert('error; createTables; units ' + JSON.stringify(e));
-    });
-    this.database.executeSql(this.queries.items(), []).catch(e => {
-      alert('error; createTables; items ' + JSON.stringify(e));
-    });
+    this.query(this.queries.user());
+    this.query(this.queries.token());
+    this.query(this.queries.products());
+    this.query(this.queries.units());
+    this.query(this.queries.shoppingLists());
+    this.query(this.queries.items());
   }
 
   async select<T>(where?: string, withTrashed?: boolean): Promise<T[]> {
@@ -90,19 +79,16 @@ export class DbService {
     } else if (!withTrashed) {
       query += ' WHERE deleted_at IS NULL';
     }
-    console.log(query);
-    return this.database
-      .executeSql(query, [])
-      .then(data => {
-        const rows = data.rows;
-        const mapped: T[] = [];
-        if (rows.length > 0) {
-          for (let i = 0; i < rows.length; i++) {
-            mapped.push(rows.item(i));
-          }
+    return this.query(query).then(data => {
+      const rows = data.rows;
+      const mapped: T[] = [];
+      if (rows.length > 0) {
+        for (let i = 0; i < rows.length; i++) {
+          mapped.push(rows.item(i));
         }
-        return mapped;
-      });
+      }
+      return mapped;
+    });
   }
 
   async find<T>(id: number): Promise<T> {
@@ -110,8 +96,8 @@ export class DbService {
     return data[0];
   }
 
-  async first<T>(): Promise<T> {
-    const data = await this.select<T>();
+  async findByName<T>(name: string): Promise<T> {
+    const data = await this.select<T>(`name = ${name}`);
     return data[0];
   }
 
@@ -120,29 +106,108 @@ export class DbService {
     return data[0];
   }
 
-  async insert(columns: string, values: string): Promise<void> {
+  async first<T>(): Promise<T> {
+    const data = await this.select<T>();
+    return data[0];
+  }
+
+  async insert(row: any, timestamp: boolean = true): Promise<void> {
     if (!this.currentTable) {
       alert('No table selected!');
       return;
     }
 
-    const query = `INSERT INTO ${this.currentTable} (${columns}, created_at) VALUES (${values}, datetime())`;
-    console.log(query);
-    this.database.executeSql(query, []).catch(e => {
-      alert('error ' + JSON.stringify(e));
+    if (timestamp === true) {
+      delete row.created_at;
+    }
+
+    let columns = '';
+    let values = '';
+    Object.keys(row).forEach(key => {
+      if (key === 'id') {
+        return;
+      } else if (
+        row[key] === null ||
+        row[key] === false ||
+        row[key] === true ||
+        typeof row[key] === 'number'
+      ) {
+        columns += `${key},`;
+        values += `${row[key]},`;
+      } else if (
+        (key === 'remote_id' || key === 'created_at') &&
+        timestamp === true
+      ) {
+        return;
+      } else {
+        columns += `${key},`;
+        values += `"${row[key]}",`;
+      }
     });
+
+    if (timestamp === true) {
+      columns += 'created_at,';
+      values += 'datetime(),';
+    }
+
+    columns = columns.replace(/,+$/, '');
+    values = values.replace(/,+$/, '');
+
+    const query = `INSERT INTO ${this.currentTable} (${columns}) VALUES (${values})`;
+    this.query(query);
   }
 
-  async update(id: number, set: string): Promise<void> {
-    return this.updateRaw(id, `${set}, updated_at = datetime()`);
+  async update(id: number, row: any, timestamp: boolean = true): Promise<void> {
+    this.updateBy('id', id, row, timestamp);
   }
 
-  async updateRaw(id: number, set: string): Promise<void> {
-    const query = `UPDATE ${this.currentTable} SET ${set} WHERE id = ${id}`;
-    console.log(query);
-    this.database.executeSql(query, []).catch(e => {
-      alert('error ' + JSON.stringify(e));
+  async updateBy(
+    column: string,
+    value: number | string | boolean,
+    row: any,
+    timestamp: boolean = true
+  ): Promise<void> {
+    if (!this.currentTable) {
+      alert('No table selected!');
+      return;
+    }
+
+    if (timestamp === true) {
+      delete row.updated_at;
+    }
+
+    let set = '';
+    Object.keys(row).forEach(key => {
+      if (key === 'id') {
+        return;
+      } else if (
+        (key === 'remote_id' || key === 'updated_at') &&
+        timestamp === true
+      ) {
+        return;
+      } else if (
+        row[key] === null ||
+        row[key] === false ||
+        row[key] === true ||
+        typeof row[key] === 'number'
+      ) {
+        set += `${key} = ${row[key]},`;
+      } else {
+        set += `${key} = "${row[key]}",`;
+      }
     });
+
+    if (timestamp === true) {
+      set += 'updated_at = datetime(),';
+    }
+
+    set = set.replace(/,+$/, '');
+
+    if (typeof value !== 'number') {
+      value = `"${value}"`;
+    }
+    const query = `UPDATE ${this.currentTable} SET ${set} WHERE ${column} = ${value}`;
+    this.query(query);
   }
 
   async delete(id: number): Promise<void> {
@@ -153,11 +218,11 @@ export class DbService {
     column: string,
     value: string | number | boolean
   ): Promise<void> {
+    if (typeof value !== 'number') {
+      value = `"${value}"`;
+    }
     const query = `UPDATE ${this.currentTable} SET deleted_at = datetime() WHERE ${column} = ${value}`;
-    console.log(query);
-    this.database.executeSql(query, []).catch(e => {
-      alert('error ' + JSON.stringify(e));
-    });
+    this.query(query);
   }
 
   async forceDelete(id: number): Promise<void> {
@@ -169,9 +234,11 @@ export class DbService {
     value: string | number | boolean
   ): Promise<void> {
     const query = `DELETE FROM ${this.currentTable} WHERE ${column} = ${value}`;
-    console.log(query);
-    this.database.executeSql(query, []).catch(e => {
-      alert('error ' + JSON.stringify(e));
-    });
+    this.query(query);
+  }
+
+  async truncate(): Promise<void> {
+    const query = `DELETE FROM ${this.currentTable}`;
+    this.query(query);
   }
 }
