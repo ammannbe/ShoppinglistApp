@@ -77,7 +77,7 @@
     <div *ngFor="let product of productsSearch">
       <ion-item-divider class="list-entry" (ionSwipe)="removeProduct(product)">
         <ion-item-sliding #item>
-          <ion-item>
+          <ion-item (click)="selectProduct(product)">
             {{ product.name }}
           </ion-item>
           <ion-item-options side="end">
