@@ -43,10 +43,9 @@ export class ShoppingListsPage implements OnInit {
   ) {}
 
   ngOnInit() {
-    // TODO: needs improvements
     setTimeout(() => {
       this.load();
-    }, 400);
+    }, 200);
 
     this.statusBar.styleBlackOpaque();
     this.subscribeKeyboardEvents();
@@ -59,7 +58,7 @@ export class ShoppingListsPage implements OnInit {
         setTimeout(() => {
           this.hideAdd();
           this.hideEdit();
-        }, 200); // Make it a little bit smoother
+        }, 200);
       });
     });
 

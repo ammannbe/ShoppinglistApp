@@ -39,7 +39,6 @@ export class EditPage implements OnInit {
     private toast: ToastService,
     private utilHelper: UtilHelperService
   ) {
-    // TODO: needs improvements
     setTimeout(() => {
       this.activatedRoute.paramMap.subscribe(paramMap => {
         if (!paramMap.has('id')) {

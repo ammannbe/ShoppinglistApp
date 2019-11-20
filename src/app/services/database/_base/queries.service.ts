@@ -80,7 +80,7 @@ export class QueriesService {
       ' shopping_lists ' +
       '(' +
       'id INTEGER PRIMARY KEY,' +
-      'remote_id INTEGER UNIQUE,' + // TODO: unique vlt. entfernen, wegen NULL?
+      'remote_id INTEGER UNIQUE,' +
       'owner_email varchar(255),' +
       'name varchar(255),' +
       'created_at TIMESTAMP,' +

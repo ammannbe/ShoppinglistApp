@@ -27,7 +27,6 @@ export class ItemsPage implements OnInit {
     private utilHelper: UtilHelperService,
     private activatedRoute: ActivatedRoute
   ) {
-    // TODO: needs improvements
     setTimeout(() => {
       this.activatedRoute.paramMap.subscribe(paramMap => {
         if (!paramMap.has('id')) {
@@ -64,7 +63,10 @@ export class ItemsPage implements OnInit {
         }
       });
       this.itemsDone = this.utilHelper.sortBy('product_name', this.itemsDone);
-      this.itemsUndone = this.utilHelper.sortBy('product_name', this.itemsUndone);
+      this.itemsUndone = this.utilHelper.sortBy(
+        'product_name',
+        this.itemsUndone
+      );
     });
   }
 

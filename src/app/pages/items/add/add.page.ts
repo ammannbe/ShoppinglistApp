@@ -41,7 +41,6 @@ export class AddPage implements OnInit {
     private utilHelper: UtilHelperService,
     private alertController: AlertController
   ) {
-    // TODO: needs improvements
     setTimeout(() => {
       this.activatedRoute.paramMap.subscribe(paramMap => {
         if (!paramMap.has('id')) {
