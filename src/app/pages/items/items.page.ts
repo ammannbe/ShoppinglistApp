@@ -20,6 +20,7 @@ export class ItemsPage implements OnInit {
   public itemsDone: Item[];
   public itemsUndone: Item[];
   public hasItems = true;
+  public slidingItem = null;
 
   constructor(
     private itemService: ItemsService,
@@ -48,6 +49,25 @@ export class ItemsPage implements OnInit {
 
   ngOnInit() {}
 
+  itemOnSlide(slidingItem, $event) {
+    // ratio > 0 == opening
+    // ratio = 1 == opened
+    // ratio > 1 == overscroll
+    if ($event.detail.ratio >= 1) {
+      this.slidingItem = slidingItem;
+    } else {
+      this.slidingItem = null;
+    }
+  }
+
+  private closeSlidingItemIfOpen() {
+    console.log(this.slidingItem);
+    if (this.slidingItem !== null) {
+      this.slidingItem.close();
+      this.slidingItem = null;
+    }
+  }
+
   load(forceSync: boolean = false) {
     this.itemService.index(this.shoppingList, forceSync).then(items => {
       if (!items.length) {
@@ -72,12 +92,14 @@ export class ItemsPage implements OnInit {
 
   reload($event: any = null, forceSync: boolean = false) {
     this.load(forceSync);
+    this.closeSlidingItemIfOpen();
     if ($event) {
       $event.target.complete();
     }
   }
 
   done(item: Item) {
+    this.closeSlidingItemIfOpen();
     item.done = true;
     this.itemService.update(item.id, this.shoppingList, item).then(() => {
       this.reload();
@@ -85,6 +107,7 @@ export class ItemsPage implements OnInit {
   }
 
   undone(item: Item) {
+    this.closeSlidingItemIfOpen();
     item.done = false;
     this.itemService.update(item.id, this.shoppingList, item).then(() => {
       this.reload();
@@ -92,6 +115,7 @@ export class ItemsPage implements OnInit {
   }
 
   remove(item: Item) {
+    this.closeSlidingItemIfOpen();
     this.itemService.destroy(this.shoppingList, item).then(() => {
       this.reload();
     });

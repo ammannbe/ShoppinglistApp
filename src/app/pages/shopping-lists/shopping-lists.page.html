@@ -7,19 +7,19 @@
     </ion-buttons>
     <ion-title>Einkaufslisten</ion-title>
     <ion-buttons slot="end">
-      <ion-button (click)="showAdd()">
+      <ion-button (click)="showAddInput()">
         <ion-icon name="add"></ion-icon>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
-<ion-content>
+<ion-content (click)="closeSlidingItemIfOpen()">
   <ion-refresher slot="fixed" (ionRefresh)="reload($event, true)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
 
-  <form (submit)="add()" *ngIf="showAddInput && !showEditInput">
+  <form (submit)="add()" *ngIf="addInputIsVisible && !editInputIsVisible">
     <ion-item-divider class="input-item">
       <ion-input
         #autofocus
@@ -31,7 +31,7 @@
     </ion-item-divider>
   </form>
 
-  <form (submit)="edit()" *ngIf="showEditInput && !showAddInput">
+  <form (submit)="edit()" *ngIf="editInputIsVisible && !addInputIsVisible">
     <ion-item-divider class="input-item">
       <ion-input
         #autofocus
@@ -50,8 +50,10 @@
         class="list-entry"
         (ionSwipe)="remove(i)"
       >
-        <ion-item-sliding #item>
-          <ion-item [routerLink]="keyboardIsVisible ? null : [i.id]">
+        <ion-item-sliding #item (ionDrag)="itemOnSlide(item, $event)">
+          <ion-item
+            [routerLink]="keyboardIsVisible || slidingItem ? null : [i.id]"
+          >
             <ion-label class="ion-text-wrap">
               {{ i.name }}
               <br />
@@ -64,7 +66,7 @@
             <ion-item-option color="secondary" (click)="showShare(i)">
               <ion-icon name="person-add"></ion-icon>
             </ion-item-option>
-            <ion-item-option color="primary" (click)="showEdit(i)">
+            <ion-item-option color="primary" (click)="showEditInput(i)">
               <ion-icon name="create"></ion-icon>
             </ion-item-option>
             <ion-item-option color="danger" expandable (click)="remove(i)">

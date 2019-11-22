@@ -24,10 +24,11 @@ export class ShoppingListsPage implements OnInit {
   public shoppingLists: ShoppingList[];
   public user: User;
   public email: string;
-  public showAddInput: boolean;
-  public showEditInput: boolean;
+  public addInputIsVisible: boolean;
+  public editInputIsVisible: boolean;
   public keyboardIsVisible = false;
   public hasShoppingLists = true;
+  public slidingItem = null;
 
   constructor(
     private userService: UserService,
@@ -56,8 +57,8 @@ export class ShoppingListsPage implements OnInit {
       this.ngZone.run(() => {
         this.keyboardIsVisible = false;
         setTimeout(() => {
-          this.hideAdd();
-          this.hideEdit();
+          this.hideAddInput();
+          this.hideEditInput();
         }, 200);
       });
     });
@@ -67,6 +68,24 @@ export class ShoppingListsPage implements OnInit {
         this.keyboardIsVisible = true;
       });
     });
+  }
+
+  itemOnSlide(slidingItem, $event) {
+    // ratio > 0 == opening
+    // ratio = 1 == opened
+    // ratio > 1 == overscroll
+    if ($event.detail.ratio >= 1) {
+      this.slidingItem = slidingItem;
+    } else {
+      this.slidingItem = null;
+    }
+  }
+
+  private closeSlidingItemIfOpen() {
+    if (this.slidingItem !== null) {
+      this.slidingItem.close();
+      this.slidingItem = null;
+    }
   }
 
   load(forceSync: boolean = false) {
@@ -82,8 +101,9 @@ export class ShoppingListsPage implements OnInit {
   }
 
   reload($event: any = null, forceSync: boolean = false) {
-    this.hideAll();
+    this.hideAllInputs();
     this.load(forceSync);
+    this.closeSlidingItemIfOpen();
     if ($event) {
       $event.target.complete();
     }
@@ -102,32 +122,29 @@ export class ShoppingListsPage implements OnInit {
     this.shoppingListsService.destroy(shoppingList.id).then(() => {
       loading.dismiss();
     });
-    this.load();
+    this.reload();
   }
 
-  hideAll() {
-    this.hideAdd();
-    this.hideEdit();
+  hideAllInputs() {
+    this.hideAddInput();
+    this.hideEditInput();
   }
 
-  showAdd() {
-    this.hideAll();
+  showAddInput() {
+    this.hideAllInputs();
+    this.closeSlidingItemIfOpen();
 
     setTimeout(() => {
       this.ionInput.setFocus();
     }, 400);
 
-    this.showAddInput = true;
+    this.addInputIsVisible = true;
   }
 
-  showAddThroughPullEvent(refresher): void {
-    refresher.target.complete();
-    this.showAdd();
-  }
-
-  hideAdd() {
+  hideAddInput() {
     this.name = null;
-    this.showAddInput = false;
+    this.addInputIsVisible = false;
+    this.closeSlidingItemIfOpen();
   }
 
   add() {
@@ -135,7 +152,7 @@ export class ShoppingListsPage implements OnInit {
     if (!this.name.length) {
       alert('Der Name fehlt!');
       setTimeout(() => {
-        this.showAdd();
+        this.showAddInput();
       }, 500);
       return;
     }
@@ -146,8 +163,8 @@ export class ShoppingListsPage implements OnInit {
     });
   }
 
-  showEdit(shoppingList: ShoppingList) {
-    this.hideAll();
+  showEditInput(shoppingList: ShoppingList) {
+    this.hideAllInputs();
 
     setTimeout(() => {
       this.ionInput.setFocus();
@@ -155,13 +172,14 @@ export class ShoppingListsPage implements OnInit {
 
     this.shoppingList = shoppingList;
     this.name = shoppingList.name;
-    this.showEditInput = true;
+    this.editInputIsVisible = true;
   }
 
-  hideEdit() {
+  hideEditInput() {
     this.shoppingList = null;
     this.name = null;
-    this.showEditInput = false;
+    this.editInputIsVisible = false;
+    this.closeSlidingItemIfOpen();
   }
 
   edit() {
@@ -171,14 +189,13 @@ export class ShoppingListsPage implements OnInit {
     if (!this.name.length) {
       alert('Der Name fehlt!');
       setTimeout(() => {
-        this.showAdd();
+        this.showAddInput();
       }, 500);
       return;
     }
-    const shoppingList = {} as ShoppingList;
-    shoppingList.name = this.name;
+
     this.shoppingListsService
-      .update(this.shoppingList.id, shoppingList)
+      .update(this.shoppingList.id, { name: this.name } as ShoppingList)
       .then(() => {
         this.reload();
       });
