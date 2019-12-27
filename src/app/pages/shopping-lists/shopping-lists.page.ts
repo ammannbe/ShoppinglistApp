@@ -81,7 +81,7 @@ export class ShoppingListsPage implements OnInit {
     }
   }
 
-  private closeSlidingItemIfOpen() {
+  closeSlidingItemIfOpen() {
     if (this.slidingItem !== null) {
       this.slidingItem.close();
       this.slidingItem = null;
@@ -235,7 +235,6 @@ export class ShoppingListsPage implements OnInit {
                 this.reload();
               })
               .catch(err => {
-                console.log(err);
                 this.toast.showErrors(err);
               });
           }

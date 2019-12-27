@@ -60,8 +60,7 @@ export class ItemsPage implements OnInit {
     }
   }
 
-  private closeSlidingItemIfOpen() {
-    console.log(this.slidingItem);
+  closeSlidingItemIfOpen() {
     if (this.slidingItem !== null) {
       this.slidingItem.close();
       this.slidingItem = null;
