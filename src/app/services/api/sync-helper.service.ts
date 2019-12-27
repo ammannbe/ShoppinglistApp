@@ -20,7 +20,7 @@ export class SyncHelperService {
     if (this.offlineOnly === true) {
       return;
     }
-    if (!(force || this.numberOfSyncs < 0 || this.numberOfSyncs % 10 === 0)) {
+    if (!(force || this.numberOfSyncs < 0 || this.numberOfSyncs % 2 === 0)) {
       return false;
     } else if ((await this.api.checkConnection()).status === 418) {
       return true;

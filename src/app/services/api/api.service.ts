@@ -52,7 +52,7 @@ export class ApiService {
     );
   }
 
-  post<T>(url: string, data?: object): Observable<T> {
+  post<T>(url: string, data: object = {}): Observable<T> {
     console.log(`HTTP - POST ${url} - ${JSON.stringify(data)}`);
     return from(this.queryHeaders()).pipe(
       switchMap(headers => {
