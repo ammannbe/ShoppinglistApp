@@ -56,14 +56,21 @@ export class SyncService {
 
     for (const localItem of localItems) {
       if (localItem.deleted_at) {
+        let remoteDeleted = true;
         if (localItem.remote_id) {
           this.apiChanges = true;
-          await this.apiShoppingListService
-            .destroy(localItem.remote_id)
-            .toPromise();
+          try {
+            await this.apiShoppingListService
+              .destroy(localItem.remote_id)
+              .toPromise();
+          } catch (error) {
+            remoteDeleted = false;
+          }
         }
-        this.dbChanges = true;
-        await this.dbShoppingListService.forceDelete(localItem.id);
+        if (remoteDeleted) {
+          this.dbChanges = true;
+          await this.dbShoppingListService.forceDelete(localItem.id);
+        }
         continue;
       }
 
@@ -90,6 +97,10 @@ export class SyncService {
             .update(localItem.remote_id, localItem)
             .toPromise();
         }
+        if (!remoteItem) {
+          this.dbChanges = true;
+          await this.dbShoppingListService.forceDelete(localItem.id);
+        }
         continue;
       }
     }
@@ -111,10 +122,13 @@ export class SyncService {
       const localItem = remoteItem as DbShoppingList;
       localItem.remote_id = localItem.id;
       localItem.id = null;
+
       if (!found) {
         this.dbChanges = true;
         await this.dbShoppingListService.insert(localItem);
-      } else if (remoteItem.updated_at > found.updated_at) {
+      }
+
+      if (found && remoteItem.updated_at > found.updated_at) {
         this.dbChanges = true;
         await this.dbShoppingListService.update(found.id, localItem);
       }
