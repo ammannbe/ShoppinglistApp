@@ -26,8 +26,10 @@ export class LoginService {
   }
 
   async logout(): Promise<void> {
+    try {
+      await this.api.post(`${this.prefix}/logout`).toPromise();
+    } catch (error) {}
     await this.token.remove();
-    await this.api.post(`${this.prefix}/logout`);
   }
 
   async refresh(): Promise<void> {

@@ -36,7 +36,7 @@ export class UserService {
         offline_only: offlineOnly,
         created_at: null,
         updated_at: null,
-        deleted_at: null,
+        deleted_at: null
       };
       await this.db.insert(user);
       return true;
@@ -59,7 +59,7 @@ export class UserService {
     return null;
   }
 
-  async setOfflineOnly(isset: boolean = false): Promise<void> {
+  async setOfflineOnly(isset: boolean = true): Promise<void> {
     const user = await this.queryUser();
     if (user) {
       await this.db.update(user.id, { offline_only: isset });
