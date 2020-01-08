@@ -36,6 +36,11 @@ export class DbService {
 
   private async query(query: string): Promise<any> {
     console.log(query);
+
+    if (!this.database) {
+      await setTimeout(() => {}, 1000);
+    }
+
     return this.database.executeSql(query, []).catch(e => {
       alert(`Error executing query:\n${query}\nError:\n` + JSON.stringify(e));
     });
