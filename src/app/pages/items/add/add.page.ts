@@ -66,13 +66,15 @@ export class AddPage implements OnInit {
     }, 200);
   }
 
-  load(forceSync: boolean = false) {
-    this.unitService.index(forceSync).then(units => {
-      this.units = this.utilHelper.sort(units);
-    });
-    this.productService.index(forceSync).then(products => {
-      this.productsSearch = this.products = this.utilHelper.sort(products);
-    });
+  async load(forceSync: boolean = false) {
+    try {
+      this.productsSearch = this.utilHelper.sort(
+        await this.productService.index(forceSync)
+      );
+      this.units = this.utilHelper.sort(
+        await this.unitService.index(forceSync)
+      );
+    } catch (error) {}
   }
 
   reload($event: any = null, forceSync: boolean = false) {

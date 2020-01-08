@@ -32,7 +32,7 @@ export class SyncService {
     }
 
     this.dbChanges = this.apiChanges = false;
-    let dbItems = await this.dbProductService.select(true);
+    let dbItems = await this.dbProductService.select(true, true);
     let apiItems = await this.apiProductService.index().toPromise();
     await this.syncLocalToRemote(dbItems, apiItems);
     if (this.dbChanges) {
