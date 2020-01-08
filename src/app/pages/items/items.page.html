@@ -27,10 +27,12 @@
             [class.line-through]="highlight?.id === itemUndone?.id"
             (click)="done(itemUndone)"
           >
-            <small>
-              {{ itemUndone.amount || '' }} {{ itemUndone.unit_name || '' }}
-            </small>
-            {{ itemUndone.product_name }}
+            <div>
+              <small>
+                {{ itemUndone.amount || '' }} {{ itemUndone.unit_name || '' }}
+              </small>
+              {{ itemUndone.product_name }}
+            </div>
           </ion-item>
           <ion-item-options side="end">
             <ion-item-option
@@ -65,10 +67,12 @@
             [class.line-through]="highlight?.id !== itemDone?.id"
             (click)="undone(itemDone)"
           >
-            <small>
-              {{ itemDone.amount || '' }} {{ itemDone.unit_name || '' }}
-            </small>
-            {{ itemDone.product_name }}
+            <div>
+              <small>
+                {{ itemDone.amount || '' }} {{ itemDone.unit_name || '' }}
+              </small>
+              {{ itemDone.product_name }}
+            </div>
           </ion-item>
           <ion-item-options side="end">
             <ion-item-option
