@@ -24,14 +24,13 @@
       <ion-item-divider class="list-entry" (ionSwipe)="remove(itemUndone)">
         <ion-item-sliding #item (ionDrag)="itemOnSlide(item, $event)">
           <ion-item
-            (click)="keyboardIsVisible || slidingItem ? null : done(itemUndone)"
+            [class.line-through]="highlight?.id === itemUndone?.id"
+            (click)="done(itemUndone)"
           >
-            <div>
-              <small>
-                {{ itemUndone.amount || '' }} {{ itemUndone.unit_name || '' }}
-              </small>
-              {{ itemUndone.product_name }}
-            </div>
+            <small>
+              {{ itemUndone.amount || '' }} {{ itemUndone.unit_name || '' }}
+            </small>
+            {{ itemUndone.product_name }}
           </ion-item>
           <ion-item-options side="end">
             <ion-item-option
@@ -63,14 +62,13 @@
       <ion-item-divider class="list-entry" (ionSwipe)="remove(itemDone)">
         <ion-item-sliding #item (ionDrag)="itemOnSlide(item, $event)">
           <ion-item
-            (click)="keyboardIsVisible || slidingItem ? null : undone(itemDone)"
+            [class.line-through]="highlight?.id !== itemDone?.id"
+            (click)="undone(itemDone)"
           >
-            <del>
-              <small>
-                {{ itemDone.amount || '' }} {{ itemDone.unit_name || '' }}
-              </small>
-              {{ itemDone.product_name }}
-            </del>
+            <small>
+              {{ itemDone.amount || '' }} {{ itemDone.unit_name || '' }}
+            </small>
+            {{ itemDone.product_name }}
           </ion-item>
           <ion-item-options side="end">
             <ion-item-option

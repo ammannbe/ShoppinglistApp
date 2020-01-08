@@ -21,6 +21,7 @@ export class ItemsPage implements OnInit {
   public itemsUndone: Item[];
   public hasItems = true;
   public slidingItem = null;
+  public highlight: Item = null;
 
   constructor(
     private itemService: ItemsService,
@@ -86,6 +87,8 @@ export class ItemsPage implements OnInit {
         'product_name',
         this.itemsUndone
       );
+
+      this.unhighlightItem();
     });
   }
 
@@ -98,16 +101,28 @@ export class ItemsPage implements OnInit {
   }
 
   done(item: Item) {
-    this.closeSlidingItemIfOpen();
+    if (this.slidingItem) {
+      return false;
+    }
+    if (this.keyboardIsVisible) {
+      return false;
+    }
     item.done = true;
+    this.highlightItem(item);
     this.itemService.update(item.id, this.shoppingList, item).then(() => {
       this.reload();
     });
   }
 
   undone(item: Item) {
-    this.closeSlidingItemIfOpen();
+    if (this.slidingItem) {
+      return false;
+    }
+    if (this.keyboardIsVisible) {
+      return false;
+    }
     item.done = false;
+    this.highlightItem(item);
     this.itemService.update(item.id, this.shoppingList, item).then(() => {
       this.reload();
     });
@@ -118,5 +133,13 @@ export class ItemsPage implements OnInit {
     this.itemService.destroy(this.shoppingList, item).then(() => {
       this.reload();
     });
+  }
+
+  private highlightItem(item: Item) {
+    this.highlight = item;
+  }
+
+  private unhighlightItem() {
+    this.highlight = null;
   }
 }
