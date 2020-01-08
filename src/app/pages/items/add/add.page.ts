@@ -68,9 +68,10 @@ export class AddPage implements OnInit {
 
   async load(forceSync: boolean = false) {
     try {
-      this.productsSearch = this.utilHelper.sort(
+      this.products = this.utilHelper.sort(
         await this.productService.index(forceSync)
       );
+      this.productsSearch = this.products;
       this.units = this.utilHelper.sort(
         await this.unitService.index(forceSync)
       );
@@ -189,9 +190,12 @@ export class AddPage implements OnInit {
   }
 
   async addProduct(name: string): Promise<void> {
-    const found = this.products.find(product => {
-      return product.name.toLowerCase() === name.toLowerCase();
-    });
+    let found = null;
+    if (this.products) {
+      found = this.products.find(product => {
+        return product.name.toLowerCase() === name.toLowerCase();
+      });
+    }
     if (!found) {
       const alert = await this.alertController.create({
         header: `"${name}" existiert noch nicht.`,
