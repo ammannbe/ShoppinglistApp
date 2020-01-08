@@ -30,6 +30,9 @@ export class ToastService {
     }
     const obj = err.error;
     let message = obj.message;
+    if (message === undefined) {
+      message = obj;
+    }
     let msg: any;
 
     if (obj.errors) {
