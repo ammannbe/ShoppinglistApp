@@ -106,7 +106,7 @@ Generate docs and open in Firefox
 
 ```
 npm run typedoc
-firefox docs/typedoc/index.html &
+firefox docs/index.html &
 ```
 
 ## Built With
