@@ -2,6 +2,14 @@ ion-list-header {
   min-height: 0;
   margin-top: 4px;
   padding-bottom: 5px;
+  padding-right: 10px;
+
+  ion-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+  }
 }
 
 .line-through {

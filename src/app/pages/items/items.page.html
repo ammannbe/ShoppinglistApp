@@ -58,6 +58,9 @@
     <ion-list-header>
       <ion-label>
         <b><u>Erledigte Einkäufe</u></b>
+        <ion-button size="small" color="danger" (click)="remove(itemsDone)">
+          <ion-icon name="trash"></ion-icon>
+        </ion-button>
       </ion-label>
     </ion-list-header>
     <div *ngFor="let itemDone of itemsDone">

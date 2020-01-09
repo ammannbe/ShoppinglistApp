@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { AlertController } from '@ionic/angular';
 
 import { ShoppingListsService } from '../shopping-lists/shopping-lists.service';
 import { ItemsService } from './items.service';
@@ -27,7 +28,8 @@ export class ItemsPage implements OnInit {
     private itemService: ItemsService,
     private shoppingListService: ShoppingListsService,
     private utilHelper: UtilHelperService,
-    private activatedRoute: ActivatedRoute
+    private activatedRoute: ActivatedRoute,
+    private alertController: AlertController
   ) {
     setTimeout(() => {
       this.activatedRoute.paramMap.subscribe(paramMap => {
@@ -128,10 +130,51 @@ export class ItemsPage implements OnInit {
     });
   }
 
-  remove(item: Item) {
+  async remove(item: Item | Item[]): Promise<void> {
     this.closeSlidingItemIfOpen();
-    this.itemService.destroy(this.shoppingList, item).then(() => {
-      this.reload();
+
+    let items: Item[];
+    if (item instanceof Array) {
+      items = item;
+    } else {
+      items = [item];
+    }
+
+    if (items.length > 1) {
+      if (!(await this.removeConfirmation(items))) {
+        return;
+      }
+    }
+
+    for (const item of items) {
+      await this.itemService.destroy(this.shoppingList, item);
+    }
+
+    this.reload();
+  }
+
+  async removeConfirmation(items: Item[]): Promise<boolean> {
+    return new Promise(async resolve => {
+      const alert = await this.alertController.create({
+        header: `${items.length} Einträge werden gelöscht.`,
+        message: `"Möchtest du wirklich ${items.length} Einträge löschen?`,
+        buttons: [
+          {
+            text: 'Nein',
+            role: 'cancel',
+            handler: () => {
+              return resolve(false);
+            }
+          },
+          {
+            text: 'Ja',
+            handler: () => {
+              return resolve(true);
+            }
+          }
+        ]
+      });
+      await alert.present();
     });
   }
 
