@@ -28,7 +28,7 @@ export class ApiService {
       });
   }
 
-  async queryHeaders(): Promise<HttpHeaders> {
+  private async queryHeaders(): Promise<HttpHeaders> {
     let headers = new HttpHeaders({
       Accept: 'application/json',
       'Content-Type': 'application/json; charset=utf-8'
