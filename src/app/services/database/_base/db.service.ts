@@ -17,16 +17,7 @@ export class DbService {
     private platform: Platform,
     private sqlite: SQLite,
     private queries: QueriesService
-  ) {
-    this.platform
-      .ready()
-      .then(() => {
-        this.createDB();
-      })
-      .catch(error => {
-        console.log(error);
-      });
-  }
+  ) {}
 
   use(table: string) {
     if (this.currentTable !== table) {
@@ -34,20 +25,12 @@ export class DbService {
     }
   }
 
-  private async query(query: string): Promise<any> {
-    console.log(query);
-
-    if (!this.database) {
-      await setTimeout(() => {}, 1000);
+  async createDatabaseIfNotReady(): Promise<void> {
+    if (this.database) {
+      return;
     }
 
-    return this.database.executeSql(query, []).catch(e => {
-      alert(`Error executing query:\n${query}\nError:\n` + JSON.stringify(e));
-    });
-  }
-
-  async createDB(): Promise<void> {
-    this.sqlite
+    return this.sqlite
       .create({
         name: this.dbName,
         location: this.dbLocation
@@ -57,17 +40,26 @@ export class DbService {
         this.createTables();
       })
       .catch(e => {
-        alert('error createDB ' + JSON.stringify(e));
+        alert('Error creating database:\n' + JSON.stringify(e));
       });
   }
 
-  async createTables(): Promise<void> {
-    this.query(this.queries.user());
-    this.query(this.queries.token());
-    this.query(this.queries.products());
-    this.query(this.queries.units());
-    this.query(this.queries.shoppingLists());
-    this.query(this.queries.items());
+  async createTables() {
+    await this.query(this.queries.user());
+    await this.query(this.queries.token());
+    await this.query(this.queries.products());
+    await this.query(this.queries.units());
+    await this.query(this.queries.shoppingLists());
+    await this.query(this.queries.items());
+  }
+
+  private async query(query: string): Promise<any> {
+    await this.createDatabaseIfNotReady();
+
+    console.log(query);
+    return this.database.executeSql(query, []).catch(e => {
+      alert(`Error executing query:\n${query}\nError:\n` + JSON.stringify(e));
+    });
   }
 
   async select<T>(where?: string, withTrashed?: boolean): Promise<T[]> {
