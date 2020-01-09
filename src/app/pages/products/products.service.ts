@@ -32,7 +32,7 @@ export class ProductsService {
   }
 
   async destroy(name: string): Promise<void> {
-    await this.dbProduct.delete(name);
+    await this.dbProduct.deleteBy('name', name);
     await this.syncService.sync();
   }
 }

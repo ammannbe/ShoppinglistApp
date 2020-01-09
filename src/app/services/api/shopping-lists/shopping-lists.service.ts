@@ -28,7 +28,7 @@ export class ShoppingListsService {
     return this.api.patch<ShoppingList>(`${this.prefix}/${id}`, data);
   }
 
-  destroy(id: number) {
-    return this.api.delete(`${this.prefix}/${id}`);
+  destroy(id: number): Observable<ShoppingList> {
+    return this.api.delete<ShoppingList>(`${this.prefix}/${id}`);
   }
 }

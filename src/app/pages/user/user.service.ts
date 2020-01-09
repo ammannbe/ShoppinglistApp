@@ -13,11 +13,10 @@ export class UserService {
   constructor(
     private dbUser: DbUserService,
     private authService: AuthService,
-    private loginSerivce: LoginService,
-    private apiUserService: ApiUserService
+    private loginSerivce: LoginService
   ) {}
 
-  async isLoggedIn(): Promise<boolean> {
+  public async isLoggedIn(): Promise<boolean> {
     if (await this.dbUser.offlineOny()) {
       return true;
     }
@@ -32,13 +31,20 @@ export class UserService {
     password: string,
     remember: boolean = false
   ): Promise<boolean> {
-    await this.dbUser.insert(email, password, false);
+    await this.dbUser.insert(<User>{
+      email,
+      password,
+      offline_only: false
+    });
     await this.loginSerivce.login(email, password, remember);
     return true;
   }
 
   async loginOffline(): Promise<void> {
-    await this.dbUser.insert('app@local', '', true);
+    await this.dbUser.insert(<User>{
+      email: 'app@local',
+      offline_only: true
+    });
     await this.dbUser.setOfflineOnly(true);
   }
 
@@ -48,6 +54,6 @@ export class UserService {
   }
 
   async show(): Promise<User> {
-    return await this.dbUser.queryUser();
+    return await this.dbUser.first();
   }
 }

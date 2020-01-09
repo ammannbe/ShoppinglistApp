@@ -1,61 +1,42 @@
 import { Injectable } from '@angular/core';
+import { SQLite, SQLiteObject } from '@ionic-native/sqlite/ngx';
 
 import { DbService } from '../_base/db.service';
+import { QueriesService } from '../_base/queries.service';
 import { ShoppingList } from './shopping-list';
 
 @Injectable({
   providedIn: 'root'
 })
-export class ShoppingListsService {
-  private table = 'shopping_lists';
+export class ShoppingListsService extends DbService {
+  protected table = 'shopping_lists';
 
-  constructor(private db: DbService) {}
-
-  use() {
-    this.db.use(this.table);
+  constructor(protected sqlite: SQLite, protected queries: QueriesService) {
+    super(sqlite, queries);
   }
 
-  private isRemote(shoppingList: ShoppingList) {
-    return !shoppingList.remote_id ? false : true;
+  public async select<ShoppingList = any>(
+    where: any = {},
+    withTrashed: boolean = false
+  ): Promise<ShoppingList[]> {
+    return super.select<ShoppingList>(where, withTrashed);
   }
 
-  async select(withTrashed: boolean = false): Promise<ShoppingList[]> {
-    this.use();
-    return this.db.select<ShoppingList>(null, withTrashed);
+  public async find<ShoppingList = any>(id: number): Promise<ShoppingList> {
+    return super.find<ShoppingList>(id);
   }
 
-  async find(id: number): Promise<ShoppingList> {
-    this.use();
-    return this.db.find<ShoppingList>(id);
+  public async findByRemoteId<ShoppingList = any>(
+    id: number
+  ): Promise<ShoppingList> {
+    return super.findByRemoteId<ShoppingList>(id);
   }
 
-  async findByRemoteId(id: number): Promise<ShoppingList> {
-    this.use();
-    return this.db.findByRemoteId<ShoppingList>(id);
+  public async insert(shoppingList: ShoppingList): Promise<void> {
+    super.insert(shoppingList, !this.resourceIsRemote(shoppingList));
   }
 
-  async insert(shoppingList: ShoppingList): Promise<void> {
-    this.use();
-    this.db.insert(shoppingList, !this.isRemote(shoppingList));
-  }
-
-  async update(id: number, shoppingList: ShoppingList): Promise<void> {
-    this.use();
-    this.db.update(id, shoppingList, !this.isRemote(shoppingList));
-  }
-
-  async delete(id: number): Promise<void> {
-    this.use();
-    this.db.delete(id);
-  }
-
-  async forceDelete(id: number): Promise<void> {
-    this.use();
-    this.db.forceDelete(id);
-  }
-
-  async truncate(): Promise<void> {
-    this.use();
-    this.db.truncate();
+  public async update(id: number, shoppingList: ShoppingList): Promise<void> {
+    super.update(id, shoppingList, !this.resourceIsRemote(shoppingList));
   }
 }

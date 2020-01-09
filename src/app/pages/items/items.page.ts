@@ -34,7 +34,7 @@ export class ItemsPage implements OnInit {
     setTimeout(() => {
       this.activatedRoute.paramMap.subscribe(paramMap => {
         if (!paramMap.has('id')) {
-          location.href = '/todo-lists';
+          location.href = '/shopping-lists';
           return;
         }
         this.shoppingListService

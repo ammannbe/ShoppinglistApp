@@ -12,7 +12,7 @@ import { Token as LoginToken } from './login/token';
 })
 export class ApiService {
   public HOST = 'https://shoppinglist-api.narrenhaus.ch';
-  private token: LoginToken;
+  private token: LoginToken | false;
 
   constructor(private http: HttpClient, private auth: AuthService) {}
 

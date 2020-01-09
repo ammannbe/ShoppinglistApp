@@ -41,13 +41,19 @@ export class SyncService {
 
     this.dbChanges = this.apiChanges = false;
     this.shoppingList = shoppingList;
-    let dbItems = await this.dbItemService.select(this.shoppingList.id, true);
+    let dbItems = await this.dbItemService.select(
+      { shopping_list_id: this.shoppingList.id },
+      true
+    );
     let apiItems = await this.apiItemService
       .index(this.shoppingList.remote_id)
       .toPromise();
     await this.syncLocalToRemote(dbItems, apiItems);
     if (this.dbChanges) {
-      dbItems = await this.dbItemService.select(this.shoppingList.id, true);
+      dbItems = await this.dbItemService.select(
+        { shopping_list_id: this.shoppingList.id },
+        true
+      );
     }
     if (this.apiChanges) {
       apiItems = await this.apiItemService

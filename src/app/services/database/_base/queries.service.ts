@@ -5,11 +5,11 @@ import { Injectable } from '@angular/core';
 })
 export class QueriesService {
   private create = 'CREATE TABLE IF NOT EXISTS';
-  private drop = 'DROP TABLE';
+  // private drop = 'DROP TABLE';
 
   constructor() {}
 
-  user(): string {
+  public user(): string {
     // return `${this.drop} user`; // For debugging only
     return (
       this.create +
@@ -26,7 +26,7 @@ export class QueriesService {
     );
   }
 
-  token(): string {
+  public token(): string {
     // return `${this.drop} token`; // For debugging only
     return (
       this.create +
@@ -42,7 +42,7 @@ export class QueriesService {
     );
   }
 
-  products(): string {
+  public products(): string {
     // return `${this.drop} products`; // For debugging only
     return (
       this.create +
@@ -58,7 +58,7 @@ export class QueriesService {
     );
   }
 
-  units(): string {
+  public units(): string {
     // return `${this.drop} units`; // For debugging only
     return (
       this.create +
@@ -73,7 +73,7 @@ export class QueriesService {
     );
   }
 
-  shoppingLists(): string {
+  public shoppingLists(): string {
     // return `${this.drop} shopping_lists`; // For debugging only
     return (
       this.create +
@@ -90,7 +90,7 @@ export class QueriesService {
     );
   }
 
-  items(): string {
+  public items(): string {
     // return `${this.drop} items`; // For debugging only
     return (
       this.create +

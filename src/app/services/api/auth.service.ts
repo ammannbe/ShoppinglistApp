@@ -10,23 +10,11 @@ import { TokenService } from '../database/token/token.service';
 export class AuthService {
   constructor(private dbUser: UserService, private token: TokenService) {}
 
-  async queryToken(): Promise<LoginToken> {
+  public async queryToken(): Promise<LoginToken | false> {
     return await this.token.queryToken();
   }
 
-  async tokenIsValid(): Promise<boolean> {
-    const data = await this.queryToken();
-    if (data) {
-      return new Date(data.expires_at) > new Date();
-    } else {
-      return false;
-    }
-  }
-
-  async shouldRefreshToken(): Promise<boolean> {
-    const token = await this.queryToken();
-    return (
-      new Date(token.expires_at).getTime() - new Date().getTime() < 7200000
-    );
+  public async tokenIsValid(): Promise<boolean> {
+    return this.token.isValid();
   }
 }

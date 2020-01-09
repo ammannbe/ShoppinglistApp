@@ -1,5 +1,4 @@
 import { Injectable } from '@angular/core';
-import { Platform } from '@ionic/angular';
 import { SQLite, SQLiteObject } from '@ionic-native/sqlite/ngx';
 
 import { QueriesService } from './queries.service';
@@ -7,44 +6,32 @@ import { QueriesService } from './queries.service';
 @Injectable({
   providedIn: 'root'
 })
-export class DbService {
+export abstract class DbService {
   private dbName = 'shoppinglist.db';
   private dbLocation = 'default';
   private database: SQLiteObject;
-  private currentTable: string;
+  protected table: string;
 
-  constructor(
-    private platform: Platform,
-    private sqlite: SQLite,
-    private queries: QueriesService
-  ) {}
+  constructor(protected sqlite: SQLite, protected queries: QueriesService) {}
 
-  use(table: string) {
-    if (this.currentTable !== table) {
-      this.currentTable = table;
-    }
-  }
-
-  async createDatabaseIfNotReady(): Promise<void> {
+  private async createDatabaseIfNotReady(firstRun = false): Promise<void> {
     if (this.database) {
       return;
     }
 
-    return this.sqlite
-      .create({
+    try {
+      const db = await this.sqlite.create({
         name: this.dbName,
         location: this.dbLocation
-      })
-      .then((db: SQLiteObject) => {
-        this.database = db;
-        this.createTables();
-      })
-      .catch(e => {
-        alert('Error creating database:\n' + JSON.stringify(e));
       });
+      this.database = db;
+      await this.createTables();
+    } catch (error) {
+      alert('Error creating database:\n' + JSON.stringify(error));
+    }
   }
 
-  async createTables() {
+  private async createTables() {
     await this.query(this.queries.user());
     await this.query(this.queries.token());
     await this.query(this.queries.products());
@@ -62,20 +49,57 @@ export class DbService {
     });
   }
 
-  async select<T>(where?: string, withTrashed?: boolean): Promise<T[]> {
-    if (!this.currentTable) {
-      console.log('No table selected!');
-      return;
+  private getWhereQuerySegment(
+    glue: string,
+    column: string,
+    value: string | boolean | null
+  ) {
+    if (value === null) {
+      return `${glue} ${column} IS NULL`;
     }
-    let query = `SELECT * FROM ${this.currentTable}`;
-    if (where) {
-      query += ` WHERE ${where}`;
-      if (!withTrashed) {
-        query += ' AND deleted_at IS NULL';
+
+    return `${glue} ${column} = ` + this.parseInsertOrUpdateValue(value);
+  }
+
+  private parseInsertOrUpdateValue(value) {
+    if (value === null) {
+      return `${value}`.toUpperCase();
+    }
+
+    if (value === false || value === true || typeof value === 'number') {
+      return `${+value}`;
+    }
+
+    return `"${value}"`;
+  }
+
+  protected resourceIsRemote(resource: { remote_id: number }) {
+    return !resource.remote_id ? false : true;
+  }
+
+  public async select<T = any>(
+    where: any = {},
+    withTrashed: boolean = false
+  ): Promise<T[]> {
+    if (!where) {
+      where = {};
+    }
+
+    let query = `SELECT * FROM ${this.table}`;
+    if (!withTrashed) {
+      where.deleted_at = null;
+    }
+
+    Object.keys(where).forEach((column, index) => {
+      const value = where[column];
+      let glue = 'AND';
+      if (index === 0) {
+        glue = 'WHERE';
       }
-    } else if (!withTrashed) {
-      query += ' WHERE deleted_at IS NULL';
-    }
+
+      query += ' ' + this.getWhereQuerySegment(glue, column, value);
+    });
+
     return this.query(query).then(data => {
       const rows = data.rows;
       const mapped: T[] = [];
@@ -88,154 +112,145 @@ export class DbService {
     });
   }
 
-  async find<T>(id: number): Promise<T> {
-    const data = await this.select<T>(`id = ${id}`);
+  public async find<T = any>(id: number): Promise<T> {
+    const data = await this.select<T>({ id });
     return data[0];
   }
 
-  async findByName<T>(name: string): Promise<T> {
-    const data = await this.select<T>(`name = ${name}`);
+  public async findByName<T = any>(name: string): Promise<T> {
+    const data = await this.select<T>({ name });
     return data[0];
   }
 
-  async findByRemoteId<T>(id: number): Promise<T> {
-    const data = await this.select<T>(`remote_id = ${id}`);
+  public async findByRemoteId<T = any>(remote_id: number): Promise<T> {
+    const data = await this.select<T>({ remote_id });
     return data[0];
   }
 
-  async first<T>(): Promise<T> {
+  public async first<T = any>(): Promise<T> {
     const data = await this.select<T>();
     return data[0];
   }
 
-  async insert(row: any, timestamp: boolean = true): Promise<void> {
-    if (!this.currentTable) {
-      alert('No table selected!');
-      return;
-    }
-
+  public async insert(row: any, timestamp: boolean = true): Promise<void> {
     if (timestamp === true) {
       delete row.created_at;
     }
 
     let columns = '';
     let values = '';
-    Object.keys(row).forEach(key => {
-      if (key === 'id') {
+    Object.keys(row).forEach(column => {
+      const value = row[column];
+      let parsedValue = this.parseInsertOrUpdateValue(value);
+
+      if (column === 'id') {
         return;
-      } else if (
-        row[key] === null ||
-        row[key] === false ||
-        row[key] === true ||
-        typeof row[key] === 'number'
-      ) {
-        columns += `${key},`;
-        values += `${row[key]},`;
-      } else if (
-        (key === 'remote_id' || key === 'created_at') &&
-        timestamp === true
-      ) {
-        return;
-      } else {
-        columns += `${key},`;
-        values += `"${row[key]}",`;
       }
+
+      if (timestamp === true) {
+        if (column === 'remote_id') {
+          return;
+        }
+
+        if (column === 'created_at') {
+          parsedValue = 'datetime()';
+        }
+      }
+
+      columns += `${column}, `;
+      values += `${parsedValue}, `;
     });
 
     if (timestamp === true) {
-      columns += 'created_at,';
-      values += 'datetime(),';
+      columns += 'created_at, ';
+      values += 'datetime(), ';
     }
 
-    columns = columns.replace(/,+$/, '');
-    values = values.replace(/,+$/, '');
+    columns = columns.trim().replace(/,+$/, '');
+    values = values.trim().replace(/,+$/, '');
 
-    const query = `INSERT INTO ${this.currentTable} (${columns}) VALUES (${values})`;
+    const query = `INSERT INTO ${this.table} (${columns}) VALUES (${values})`;
     this.query(query);
   }
 
-  async update(id: number, row: any, timestamp: boolean = true): Promise<void> {
+  public async update(
+    id: number,
+    row: any,
+    timestamp: boolean = true
+  ): Promise<void> {
     this.updateBy('id', id, row, timestamp);
   }
 
-  async updateBy(
+  public async updateBy(
     column: string,
     value: number | string | boolean,
     row: any,
     timestamp: boolean = true
   ): Promise<void> {
-    if (!this.currentTable) {
-      alert('No table selected!');
-      return;
-    }
-
     if (timestamp === true) {
       delete row.updated_at;
     }
 
     let set = '';
-    Object.keys(row).forEach(key => {
-      if (key === 'id') {
+    Object.keys(row).forEach(column => {
+      const value = row[column];
+      let parsedValue = this.parseInsertOrUpdateValue(value);
+
+      if (column === 'id') {
         return;
-      } else if (
-        (key === 'remote_id' || key === 'updated_at') &&
-        timestamp === true
-      ) {
-        return;
-      } else if (
-        row[key] === null ||
-        row[key] === false ||
-        row[key] === true ||
-        typeof row[key] === 'number'
-      ) {
-        set += `${key} = ${row[key]},`;
-      } else {
-        set += `${key} = "${row[key]}",`;
       }
+
+      if (timestamp === true) {
+        if (column === 'remote_id') {
+          return;
+        }
+
+        if (column === 'updated_at') {
+          parsedValue = 'datetime()';
+        }
+      }
+
+      set += `${column} = ${parsedValue}, `;
     });
 
-    if (timestamp === true) {
-      set += 'updated_at = datetime(),';
-    }
-
-    set = set.replace(/,+$/, '');
+    set = set.trim().replace(/,+$/, '');
 
     if (typeof value !== 'number') {
       value = `"${value}"`;
     }
-    const query = `UPDATE ${this.currentTable} SET ${set} WHERE ${column} = ${value}`;
+    const query = `UPDATE ${this.table} SET ${set} WHERE ${column} = ${value}`;
     this.query(query);
   }
 
-  async delete(id: number): Promise<void> {
+  public async delete(id: number): Promise<void> {
     this.deleteBy('id', id);
   }
 
-  async deleteBy(
+  public async deleteBy(
     column: string,
     value: string | number | boolean
   ): Promise<void> {
     if (typeof value !== 'number') {
       value = `"${value}"`;
     }
-    const query = `UPDATE ${this.currentTable} SET deleted_at = datetime() WHERE ${column} = ${value}`;
+    const query = `UPDATE ${this.table} SET deleted_at = datetime() WHERE ${column} = ${value}`;
     this.query(query);
   }
 
-  async forceDelete(id: number): Promise<void> {
+  public async forceDelete(id: number): Promise<void> {
     this.forceDeleteBy('id', id);
   }
 
-  async forceDeleteBy(
+  public async forceDeleteBy(
     column: string,
     value: string | number | boolean
   ): Promise<void> {
-    const query = `DELETE FROM ${this.currentTable} WHERE ${column} = ${value}`;
+    const query = `DELETE FROM ${this.table} WHERE ${column} = ${value}`;
     this.query(query);
   }
 
-  async truncate(): Promise<void> {
-    const query = `DELETE FROM ${this.currentTable}`;
+  public async truncate(): Promise<void> {
+    const query = `DELETE FROM ${this.table}`;
     this.query(query);
   }
 }

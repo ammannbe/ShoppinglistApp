@@ -2,9 +2,11 @@ import { Injectable } from '@angular/core';
 
 import { ShoppingListsService as DbShoppingListService } from '../../services/database/shopping-lists/shopping-lists.service';
 import { ShoppingListsService as ApiShoppingListService } from '../../services/api/shopping-lists/shopping-lists.service';
+import { ShoppingListSharesService as ApiShoppingListShareService } from '../../services/api/shopping-lists/shopping-list-shares.service';
 import { ShoppingList as DbShoppingList } from 'src/app/services/database/shopping-lists/shopping-list';
 import { ShoppingList as ApiShoppingList } from 'src/app/services/api/shopping-lists/shopping-list';
 import { SyncHelperService } from 'src/app/services/api/sync-helper.service';
+import { UserService } from 'src/app/services/database/user/user.service';
 
 @Injectable({
   providedIn: 'root'
@@ -16,7 +18,9 @@ export class SyncService {
   constructor(
     private syncHelper: SyncHelperService,
     private dbShoppingListService: DbShoppingListService,
-    private apiShoppingListService: ApiShoppingListService
+    private apiShoppingListService: ApiShoppingListService,
+    private apiShoppingListShareService: ApiShoppingListShareService,
+    private userService: UserService
   ) {}
 
   async sync(forceSync: boolean = false): Promise<void> {
@@ -32,11 +36,11 @@ export class SyncService {
 
     this.dbChanges = this.apiChanges = false;
 
-    let dbItems = await this.dbShoppingListService.select(true);
+    let dbItems = await this.dbShoppingListService.select({}, true);
     let apiItems = await this.apiShoppingListService.index().toPromise();
     await this.syncLocalToRemote(dbItems, apiItems);
     if (this.dbChanges) {
-      dbItems = await this.dbShoppingListService.select(true);
+      dbItems = await this.dbShoppingListService.select({}, true);
     }
     if (this.apiChanges) {
       apiItems = await this.apiShoppingListService.index().toPromise();
@@ -60,11 +64,20 @@ export class SyncService {
         if (localItem.remote_id) {
           this.apiChanges = true;
           try {
-            await this.apiShoppingListService
-              .destroy(localItem.remote_id)
-              .toPromise();
+            const user = await this.userService.first();
+            if (localItem.owner_email === user.email) {
+              await this.apiShoppingListService
+                .destroy(localItem.remote_id)
+                .toPromise();
+            } else {
+              await this.apiShoppingListShareService
+                .destroy(localItem.remote_id, user.email)
+                .toPromise();
+            }
           } catch (error) {
-            remoteDeleted = false;
+            if (error.status !== 403) {
+              remoteDeleted = false;
+            }
           }
         }
         if (remoteDeleted) {

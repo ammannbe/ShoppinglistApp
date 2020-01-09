@@ -23,9 +23,12 @@ export class ItemsService {
     return item;
   }
 
-  async index(shoppingList: ShoppingList, forceSync: boolean = false): Promise<Item[]> {
+  async index(
+    shoppingList: ShoppingList,
+    forceSync: boolean = false
+  ): Promise<Item[]> {
     await this.syncService.sync(shoppingList, forceSync);
-    return this.dbItem.select(shoppingList.id);
+    return this.dbItem.select({ shopping_list_id: shoppingList.id });
   }
 
   async insert(shoppingList: ShoppingList, item: Item): Promise<void> {
@@ -33,7 +36,11 @@ export class ItemsService {
     await this.syncService.sync(shoppingList);
   }
 
-  async update(id: number, shoppingList: ShoppingList, item: Item): Promise<void> {
+  async update(
+    id: number,
+    shoppingList: ShoppingList,
+    item: Item
+  ): Promise<void> {
     delete item.remote_id;
     item.remote_id = null;
     await this.dbItem.update(id, item);

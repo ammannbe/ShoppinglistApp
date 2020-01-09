@@ -1,55 +1,35 @@
 import { Injectable } from '@angular/core';
+import { SQLite, SQLiteObject } from '@ionic-native/sqlite/ngx';
+
 import { DbService } from '../_base/db.service';
+import { QueriesService } from '../_base/queries.service';
 import { Product } from './product';
 
 @Injectable({
   providedIn: 'root'
 })
-export class ProductsService {
-  private table = 'products';
+export class ProductsService extends DbService {
+  protected table = 'products';
 
-  constructor(private db: DbService) {}
-
-  use() {
-    this.db.use(this.table);
+  constructor(protected sqlite: SQLite, protected queries: QueriesService) {
+    super(sqlite, queries);
   }
 
-  async select(
+  public async select<Product = any>(
     isPublic: boolean = null,
     withTrashed: boolean = false
   ): Promise<Product[]> {
-    this.use();
-    let query: string = null;
-    if (isPublic === true) {
-      query = `is_public = 1`;
-    } else if (isPublic === false) {
-      query = `is_public = 0`;
+    let query: any = {};
+    if (isPublic !== null) {
+      query = { is_public: isPublic };
     }
-    return this.db.select<Product>(query, withTrashed);
+    return super.select<Product>(query, withTrashed);
   }
 
-  async find(name: string): Promise<Product> {
-    this.use();
-    return this.db.findByName<Product>(name);
-  }
-
-  async insert(product: Product, fromRemote: boolean = false): Promise<void> {
-    this.use();
-    this.db.insert(product, !fromRemote);
-  }
-
-  async update(originalName: string, product: Product, fromRemote: boolean = false): Promise<void> {
-    this.use();
-    this.db.updateBy('name', originalName, product, !fromRemote);
-  }
-
-  async delete(name: string): Promise<void> {
-    this.use();
-    this.db.deleteBy('name', name);
-  }
-
-  async forceDelete(name: string): Promise<void> {
-    this.use();
-    this.db.forceDeleteBy('name', name);
+  public async insert(
+    product: Product,
+    fromRemote: boolean = false
+  ): Promise<void> {
+    super.insert(product, !fromRemote);
   }
 }

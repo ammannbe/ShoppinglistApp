@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
 
 import { ApiService } from '../api.service';
 
@@ -11,15 +12,15 @@ export class ShoppingListSharesService {
 
   constructor(private api: ApiService) {}
 
-  async index(shoppingListId: number): Promise<any> {
-    return await this.api.get(`${this.prefix}/${shoppingListId}/${this.suffix}`).toPromise();
+  index(shoppingListId: number): Observable<any> {
+    return this.api.get(`${this.prefix}/${shoppingListId}/${this.suffix}`);
   }
 
-  async store(shoppingListId: number, email: string): Promise<any> {
-    return await this.api.post(`${this.prefix}/${shoppingListId}/${this.suffix}`, { email }).toPromise();
+  store(shoppingListId: number, email: string): Observable<any> {
+    return this.api.post(`${this.prefix}/${shoppingListId}/${this.suffix}`, { email });
   }
 
-  async destroy(shoppingListId: number, email: string): Promise<any> {
-    return await this.api.delete(`${this.prefix}/${shoppingListId}/${this.suffix}/${email}`).toPromise();
+  destroy(shoppingListId: number, email: string): Observable<any> {
+    return this.api.delete(`${this.prefix}/${shoppingListId}/${this.suffix}/${email}`);
   }
 }

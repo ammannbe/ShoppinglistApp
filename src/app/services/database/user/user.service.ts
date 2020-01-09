@@ -1,68 +1,65 @@
 import { Injectable } from '@angular/core';
+import { SQLite, SQLiteObject } from '@ionic-native/sqlite/ngx';
 
 import { DbService } from '../_base/db.service';
+import { QueriesService } from '../_base/queries.service';
 import { User } from './user';
 
 @Injectable({
   providedIn: 'root'
 })
-export class UserService {
+export class UserService extends DbService {
+  protected table = 'user';
   private user: User;
 
-  constructor(private db: DbService) {}
+  constructor(protected sqlite: SQLite, protected queries: QueriesService) {
+    super(sqlite, queries);
+  }
 
-  async queryUser(): Promise<User> {
-    this.db.use('user');
+  public async first<User = any>(): Promise<User> {
     if (this.user) {
-      return this.user;
-    } else {
-      return await this.db.first<User>();
+      return this.user as any;
     }
+
+    return super.first<User>();
   }
 
-  async insert(
-    email: string,
-    password: string,
-    offlineOnly: boolean
-  ): Promise<boolean> {
-    if (await this.queryUser()) {
-      return false;
-    } else {
-      this.db.use('user');
-      const user: User = {
-        id: null,
-        email,
-        password,
-        offline_only: offlineOnly,
-        created_at: null,
-        updated_at: null,
-        deleted_at: null
-      };
-      await this.db.insert(user);
-      return true;
+  public async insert(user: User): Promise<void> {
+    if (await this.first()) {
+      return;
     }
+
+    return super.insert(user);
   }
 
-  async getEmail(): Promise<string> {
-    const user = await this.queryUser();
+  public async getEmail(): Promise<string | null> {
+    const user = await this.first();
+    let email = null;
+
     if (user) {
-      return user.email;
+      email = user.email;
     }
-    return null;
+
+    return email;
   }
 
-  async offlineOny(): Promise<boolean> {
-    const user = await this.queryUser();
+  public async offlineOny(): Promise<boolean> {
+    const user = await this.first();
+    let offlineOnly = false;
+
     if (user) {
-      return !!user.offline_only;
+      offlineOnly = !!user.offline_only;
     }
-    return null;
+    return !!offlineOnly;
   }
 
-  async setOfflineOnly(isset: boolean = true): Promise<void> {
-    const user = await this.queryUser();
-    if (user) {
-      await this.db.update(user.id, { offline_only: isset });
+  public async setOfflineOnly(isset: boolean = true): Promise<void> {
+    const user = await this.first();
+
+    if (!user) {
+      return;
     }
+
+    return super.update(user.id, { offline_only: isset });
   }
 }

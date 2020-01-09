@@ -228,6 +228,7 @@ export class ShoppingListsPage implements OnInit {
           handler: data => {
             this.shoppingListShareService
               .store(shoppingList.remote_id, data.email)
+              .toPromise()
               .then(() => {
                 this.toast.show(
                   `"${shoppingList.name}" erfolgreich mit ${data.email} geteilt.`
