@@ -37,6 +37,8 @@ git clone https://git.narrenhaus.ch/Narrenhaus/ShoppingListApp.git
 
 ## Deploy on Google Play Store
 
+With both methods you'll get an APK, which you can upload to the google play store.
+
 ### Via Script
 
 ```bash
@@ -89,9 +91,9 @@ open platforms/ios/Todo\ Liste.xcodeproj
 
 - Change emulator to "Generic iOS Device"
 - Check Identity:
-    - Name: ShoppingList
-    - Bundle ID: ch.softronics.shoppinglist
-    - Version & Build according to config.xml
+  - Name: ShoppingList
+  - Bundle ID: (not ready yet)
+  - Version & Build according to config.xml
 - Go to Product > Archive (if the build failes, check the settings)
 - A new window opens -> Choose iOS App
 - Distribute App
@@ -111,17 +113,17 @@ firefox docs/index.html &
 
 ## Built With
 
-* [Angular](https://angular.io/) - One framework. Mobile & desktop.
-* [Cordova](https://cordova.apache.org/) - Mobile apps with HTML, CSS & JS.
-* [core-js](https://github.com/zloirock/core-js) - Standard Library.
-* [Ionic](https://ionicframework.com/) - One codebase. Any platform.
-* [RxJS](https://github.com/ReactiveX/RxJS) - A reactive programming library for JavaScript.
-* [TypeDoc](https://github.com/TypeStrong/typedoc) - Documentation generator for TypeScript projects.
-* [TypeScript](http://www.typescriptlang.org/) - JavaScript that scales.
+- [Angular](https://angular.io/) - One framework. Mobile & desktop.
+- [Cordova](https://cordova.apache.org/) - Mobile apps with HTML, CSS & JS.
+- [core-js](https://github.com/zloirock/core-js) - Standard Library.
+- [Ionic](https://ionicframework.com/) - One codebase. Any platform.
+- [RxJS](https://github.com/ReactiveX/RxJS) - A reactive programming library for JavaScript.
+- [TypeDoc](https://github.com/TypeStrong/typedoc) - Documentation generator for TypeScript projects.
+- [TypeScript](http://www.typescriptlang.org/) - JavaScript that scales.
 
 ## Authors
 
-* **Benjamin Ammann** - *Initial work* - [ammannbe](https://github.com/ammannbe)
+- **Benjamin Ammann** - _Initial work_ - [ammannbe](https://github.com/ammannbe)
 
 ## License
 
