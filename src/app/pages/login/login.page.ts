@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 
 import { UserService } from '../user/user.service';
 import { ToastService } from 'src/app/services/toast/toast.service';
@@ -16,14 +17,15 @@ export class LoginPage implements OnInit {
   constructor(
     private userService: UserService,
     private toast: ToastService,
-    private registerService: RegisterService
+    private registerService: RegisterService,
+    private router: Router
   ) {}
 
   ngOnInit() {
     setTimeout(() => {
       this.userService.isLoggedIn().then(result => {
         if (result) {
-          location.href = '/shopping-lists';
+          this.router.navigate(['/shopping-lists']);
         }
       });
     }, 500);
@@ -35,7 +37,7 @@ export class LoginPage implements OnInit {
       .then(result => {
         this.registerService.status().subscribe(data => {
           if (data.verified === true) {
-            location.href = '/shopping-lists';
+            this.router.navigate(['/shopping-lists']);
           } else {
             this.registerService.resend().subscribe(d => {
               this.toast.show(d.message);
@@ -50,6 +52,6 @@ export class LoginPage implements OnInit {
 
   async useOffline() {
     await this.userService.loginOffline();
-    location.href = '/shopping-lists';
+    this.router.navigate(['/shopping-lists']);
   }
 }

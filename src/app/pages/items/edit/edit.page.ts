@@ -1,7 +1,7 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import { ItemsService } from '../items.service';
-import { ActivatedRoute } from '@angular/router';
 import { ShoppingListsService } from '../../shopping-lists/shopping-lists.service';
 import { ShoppingList } from 'src/app/services/database/shopping-lists/shopping-list';
 import { Item } from 'src/app/services/database/items/item';
@@ -33,16 +33,17 @@ export class EditPage implements OnInit {
   constructor(
     private itemService: ItemsService,
     private unitService: UnitsService,
-    private activatedRoute: ActivatedRoute,
     private shoppingListService: ShoppingListsService,
     private productService: ProductsService,
     private toast: ToastService,
-    private utilHelper: UtilHelperService
+    private utilHelper: UtilHelperService,
+    private activatedRoute: ActivatedRoute,
+    private router: Router
   ) {
     setTimeout(() => {
       this.activatedRoute.paramMap.subscribe(paramMap => {
         if (!paramMap.has('id')) {
-          location.href = '/todo-lists';
+          this.router.navigate(['/shopping-lists']);
           return;
         }
         this.itemService.find(+paramMap.get('id')).then(item => {
@@ -101,7 +102,7 @@ export class EditPage implements OnInit {
         this.item.product_name
       } aktualisiert.`
     );
-    location.href = `/shopping-lists/${this.shoppingList.id}`;
+    this.router.navigate(['/shopping-lists', this.shoppingList.id]);
   }
 
   searchProduct(name: string) {

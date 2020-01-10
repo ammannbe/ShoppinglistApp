@@ -1,7 +1,8 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { AlertController, IonInput } from '@ionic/angular';
 
 import { ItemsService } from '../items.service';
-import { ActivatedRoute } from '@angular/router';
 import { ShoppingListsService } from '../../shopping-lists/shopping-lists.service';
 import { ShoppingList } from 'src/app/services/database/shopping-lists/shopping-list';
 import { Item } from 'src/app/services/database/items/item';
@@ -10,8 +11,8 @@ import { ToastService } from 'src/app/services/toast/toast.service';
 import { ProductsService } from '../../products/products.service';
 import { Product } from '../../products/product';
 import { UtilHelperService } from 'src/app/services/util-helper.service';
-import { AlertController, IonInput } from '@ionic/angular';
 import { UnitsService } from '../../units/units.service';
+import { LoadingService } from 'src/app/services/loading.service';
 import { Unit } from 'src/app/services/database/units/unit';
 
 @Component({
@@ -34,17 +35,19 @@ export class AddPage implements OnInit {
     private itemService: ItemsService,
     private userService: UserService,
     private unitService: UnitsService,
-    private activatedRoute: ActivatedRoute,
     private shoppingListService: ShoppingListsService,
     private productService: ProductsService,
     private toast: ToastService,
+    private loading: LoadingService,
     private utilHelper: UtilHelperService,
+    private activatedRoute: ActivatedRoute,
+    private router: Router,
     private alertController: AlertController
   ) {
     setTimeout(() => {
       this.activatedRoute.paramMap.subscribe(paramMap => {
         if (!paramMap.has('id')) {
-          location.href = '/todo-lists';
+          this.router.navigate(['/shopping-lists']);
           return;
         }
         this.shoppingListService
@@ -66,7 +69,13 @@ export class AddPage implements OnInit {
     }, 200);
   }
 
-  async load(forceSync: boolean = false) {
+  async load(forceSync: boolean = false, callback = null) {
+    this.loading.show();
+
+    if (callback !== null) {
+      callback();
+    }
+
     try {
       this.products = this.utilHelper.sort(
         await this.productService.index(forceSync)
@@ -76,10 +85,12 @@ export class AddPage implements OnInit {
         await this.unitService.index(forceSync)
       );
     } catch (error) {}
+
+    this.loading.dismiss();
   }
 
-  reload($event: any = null, forceSync: boolean = false) {
-    this.load(forceSync);
+  reload(forceSync: boolean = false, callback = null, $event: any = null) {
+    this.load(forceSync, callback);
     if ($event) {
       $event.target.complete();
     }
@@ -91,7 +102,6 @@ export class AddPage implements OnInit {
 
     if (!this.product.length) {
       alert('Das Produkt fehlt!');
-      this.load();
       return;
     }
 
@@ -185,8 +195,7 @@ export class AddPage implements OnInit {
   }
 
   removeProduct(product: Product) {
-    this.productService.destroy(product.name);
-    this.reload();
+    this.reload(false, () => this.productService.destroy(product.name));
   }
 
   async addProduct(name: string): Promise<void> {

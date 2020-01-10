@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AlertController } from '@ionic/angular';
 
 import { ShoppingListsService } from '../shopping-lists/shopping-lists.service';
@@ -7,6 +7,7 @@ import { ItemsService } from './items.service';
 import { Item } from 'src/app/services/database/items/item';
 import { ShoppingList } from 'src/app/services/database/shopping-lists/shopping-list';
 import { UtilHelperService } from 'src/app/services/util-helper.service';
+import { LoadingService } from 'src/app/services/loading.service';
 
 @Component({
   selector: 'app-items',
@@ -28,13 +29,15 @@ export class ItemsPage implements OnInit {
     private itemService: ItemsService,
     private shoppingListService: ShoppingListsService,
     private utilHelper: UtilHelperService,
+    private loading: LoadingService,
     private activatedRoute: ActivatedRoute,
+    private router: Router,
     private alertController: AlertController
   ) {
     setTimeout(() => {
       this.activatedRoute.paramMap.subscribe(paramMap => {
         if (!paramMap.has('id')) {
-          location.href = '/shopping-lists';
+          this.router.navigate(['/shopping-lists']);
           return;
         }
         this.shoppingListService
@@ -64,46 +67,55 @@ export class ItemsPage implements OnInit {
   }
 
   closeSlidingItemIfOpen() {
-    if (this.slidingItem !== null) {
+    if (this.slidingItemIsOpen()) {
       this.slidingItem.close();
       this.slidingItem = null;
     }
   }
 
-  load(forceSync: boolean = false) {
-    this.itemService.index(this.shoppingList, forceSync).then(items => {
-      if (!items.length) {
-        this.hasItems = false;
-      }
-      this.itemsDone = [];
-      this.itemsUndone = [];
-      items.forEach(item => {
-        if (item.done) {
-          this.itemsDone.push(item);
-        } else {
-          this.itemsUndone.push(item);
-        }
-      });
-      this.itemsDone = this.utilHelper.sortBy('product_name', this.itemsDone);
-      this.itemsUndone = this.utilHelper.sortBy(
-        'product_name',
-        this.itemsUndone
-      );
-
-      this.unhighlightItem();
-    });
+  slidingItemIsOpen(): boolean {
+    return !!this.slidingItem;
   }
 
-  reload($event: any = null, forceSync: boolean = false) {
-    this.load(forceSync);
+  async load(forceSync: boolean = false, callback = null) {
+    await this.loading.show();
+
+    if (callback !== null) {
+      callback();
+    }
+
+    this.hasItems = true;
+    this.itemsDone = [];
+    this.itemsUndone = [];
+
+    let items = await this.itemService.index(this.shoppingList, forceSync);
+    items = this.utilHelper.sortBy('product_name', items);
+    if (!items.length) {
+      this.hasItems = false;
+    }
+    items.forEach(item => {
+      if (item.done) {
+        this.itemsDone.push(item);
+      } else {
+        this.itemsUndone.push(item);
+      }
+    });
+
+    this.unhighlightItem();
+    await this.loading.dismiss();
+  }
+
+  reload(forceSync: boolean = false, callback = null, $event: any = null) {
+    this.load(forceSync, callback);
     this.closeSlidingItemIfOpen();
+
     if ($event) {
       $event.target.complete();
     }
   }
 
   done(item: Item) {
-    if (this.slidingItem) {
+    if (this.slidingItemIsOpen()) {
       return false;
     }
     if (this.keyboardIsVisible) {
@@ -111,13 +123,13 @@ export class ItemsPage implements OnInit {
     }
     item.done = true;
     this.highlightItem(item);
-    this.itemService.update(item.id, this.shoppingList, item).then(() => {
-      this.reload();
-    });
+    this.reload(false, () =>
+      this.itemService.update(item.id, this.shoppingList, item)
+    );
   }
 
   undone(item: Item) {
-    if (this.slidingItem) {
+    if (this.slidingItemIsOpen()) {
       return false;
     }
     if (this.keyboardIsVisible) {
@@ -125,9 +137,17 @@ export class ItemsPage implements OnInit {
     }
     item.done = false;
     this.highlightItem(item);
-    this.itemService.update(item.id, this.shoppingList, item).then(() => {
-      this.reload();
-    });
+    this.reload(false, () =>
+      this.itemService.update(item.id, this.shoppingList, item)
+    );
+  }
+
+  private highlightItem(item: Item) {
+    this.highlight = item;
+  }
+
+  private unhighlightItem() {
+    this.highlight = null;
   }
 
   async remove(item: Item | Item[]): Promise<void> {
@@ -140,17 +160,13 @@ export class ItemsPage implements OnInit {
       items = [item];
     }
 
-    if (items.length > 1) {
-      if (!(await this.removeConfirmation(items))) {
-        return;
-      }
+    if (items.length > 1 && !(await this.removeConfirmation(items))) {
+      return;
     }
 
-    for (const item of items) {
-      await this.itemService.destroy(this.shoppingList, item);
-    }
-
-    this.reload();
+    this.reload(false, () =>
+      this.itemService.batchDestroy(this.shoppingList, items)
+    );
   }
 
   async removeConfirmation(items: Item[]): Promise<boolean> {
@@ -178,11 +194,7 @@ export class ItemsPage implements OnInit {
     });
   }
 
-  private highlightItem(item: Item) {
-    this.highlight = item;
-  }
-
-  private unhighlightItem() {
-    this.highlight = null;
+  public edit(item: Item) {
+    this.router.navigate(['/items', item.id, 'edit']);
   }
 }

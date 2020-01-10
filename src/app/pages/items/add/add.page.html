@@ -15,7 +15,7 @@
 </ion-header>
 
 <ion-content>
-  <ion-refresher slot="fixed" (ionRefresh)="reload($event, true)">
+  <ion-refresher slot="fixed" (ionRefresh)="reload(true, null, $event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
 
@@ -75,17 +75,13 @@
   </div>
   <ion-list *ngIf="productsSearch?.length">
     <div *ngFor="let product of productsSearch">
-      <ion-item-divider class="list-entry" (ionSwipe)="removeProduct(product)">
+      <ion-item-divider class="list-entry">
         <ion-item-sliding #item>
           <ion-item (click)="selectProduct(product)">
             {{ product.name }}
           </ion-item>
           <ion-item-options side="end">
-            <ion-item-option
-              color="danger"
-              expandable
-              (click)="removeProduct(product)"
-            >
+            <ion-item-option color="danger" (click)="removeProduct(product)">
               <ion-icon name="trash"></ion-icon>
             </ion-item-option>
           </ion-item-options>

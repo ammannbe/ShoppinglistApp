@@ -48,9 +48,16 @@ export class ItemsService {
   }
 
   async destroy(shoppingList: ShoppingList, item: Item): Promise<void> {
-    delete item.remote_id;
-    item.remote_id = null;
     await this.dbItem.delete(item.id);
+    await this.syncService.sync(shoppingList);
+  }
+
+  async batchDestroy(shoppingList: ShoppingList, items: Item[]): Promise<void> {
+    let ids = [];
+    for (const item of items) {
+      ids.push(item.id);
+    }
+    await this.dbItem.batchDelete(ids);
     await this.syncService.sync(shoppingList);
   }
 }

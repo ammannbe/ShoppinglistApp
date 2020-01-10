@@ -15,7 +15,7 @@
 </ion-header>
 
 <ion-content (click)="closeSlidingItemIfOpen()">
-  <ion-refresher slot="fixed" (ionRefresh)="reload($event, true)">
+  <ion-refresher slot="fixed" (ionRefresh)="reload(true, null, $event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
 
@@ -46,14 +46,11 @@
   <ion-list>
     <div *ngFor="let i of shoppingLists">
       <ion-item-divider
-        *ngIf="i?.id !== shoppingList?.id"
+        *ngIf="i?.id !== editShoppingList?.id"
         class="list-entry"
-        (ionSwipe)="remove(i)"
       >
         <ion-item-sliding #item (ionDrag)="itemOnSlide(item, $event)">
-          <ion-item
-            [routerLink]="keyboardIsVisible || slidingItem ? null : [i.id]"
-          >
+          <ion-item (click)="open(i)">
             <ion-label class="ion-text-wrap">
               {{ i.name }}
               <br />
@@ -69,7 +66,7 @@
             <ion-item-option color="primary" (click)="showEditInput(i)">
               <ion-icon name="create"></ion-icon>
             </ion-item-option>
-            <ion-item-option color="danger" expandable (click)="remove(i)">
+            <ion-item-option color="danger" (click)="remove(i)">
               <ion-icon name="trash"></ion-icon>
             </ion-item-option>
           </ion-item-options>

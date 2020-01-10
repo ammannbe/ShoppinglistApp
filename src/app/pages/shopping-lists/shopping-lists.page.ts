@@ -1,15 +1,17 @@
 import { Component, OnInit, ViewChild, NgZone } from '@angular/core';
-import { LoadingController, IonInput, AlertController } from '@ionic/angular';
-
-import { UserService } from '../user/user.service';
-import { ShoppingListsService } from './shopping-lists.service';
+import { IonInput, AlertController } from '@ionic/angular';
+import { Router } from '@angular/router';
 import { Keyboard } from '@ionic-native/keyboard/ngx';
 import { StatusBar } from '@ionic-native/status-bar/ngx';
+
 import { ShoppingList } from 'src/app/services/database/shopping-lists/shopping-list';
+import { User } from 'src/app/services/database/user/user';
+import { UserService } from '../user/user.service';
+import { ShoppingListsService } from './shopping-lists.service';
 import { UtilHelperService } from 'src/app/services/util-helper.service';
 import { ShoppingListSharesService } from 'src/app/services/api/shopping-lists/shopping-list-shares.service';
 import { ToastService } from 'src/app/services/toast/toast.service';
-import { User } from 'src/app/services/database/user/user';
+import { LoadingService } from 'src/app/services/loading.service';
 
 @Component({
   selector: 'app-shopping-lists',
@@ -20,7 +22,7 @@ export class ShoppingListsPage implements OnInit {
   @ViewChild('autofocus', { static: false }) ionInput: IonInput;
 
   public name = '';
-  public shoppingList: ShoppingList;
+  public editShoppingList: ShoppingList;
   public shoppingLists: ShoppingList[];
   public user: User;
   public email: string;
@@ -36,11 +38,12 @@ export class ShoppingListsPage implements OnInit {
     private shoppingListShareService: ShoppingListSharesService,
     private utilHelper: UtilHelperService,
     private toast: ToastService,
-    private loading: LoadingController,
+    private loading: LoadingService,
     private keyboard: Keyboard,
     private ngZone: NgZone,
     private statusBar: StatusBar,
-    private alertController: AlertController
+    private alertController: AlertController,
+    private router: Router
   ) {}
 
   ngOnInit() {
@@ -82,28 +85,40 @@ export class ShoppingListsPage implements OnInit {
   }
 
   closeSlidingItemIfOpen() {
-    if (this.slidingItem !== null) {
+    if (this.slidingItemIsOpen()) {
       this.slidingItem.close();
       this.slidingItem = null;
     }
   }
 
-  load(forceSync: boolean = false) {
-    this.shoppingListsService.index(forceSync).then(shoppingLists => {
-      this.shoppingLists = shoppingLists;
-      if (!this.shoppingLists.length) {
-        this.hasShoppingLists = false;
-      }
-    });
+  slidingItemIsOpen(): boolean {
+    return !!this.slidingItem;
+  }
+
+  async load(forceSync: boolean = false, callback = null) {
+    this.loading.show();
+
+    if (callback !== null) {
+      callback();
+    }
+
     this.userService.show().then(user => {
       this.user = user;
     });
+    this.hasShoppingLists = true;
+    this.shoppingLists = await this.shoppingListsService.index(forceSync);
+    if (!this.shoppingLists.length) {
+      this.hasShoppingLists = false;
+    }
+
+    this.loading.dismiss();
   }
 
-  reload($event: any = null, forceSync: boolean = false) {
+  reload(forceSync: boolean = false, callback = null, $event: any = null) {
     this.hideAllInputs();
-    this.load(forceSync);
+    this.load(forceSync, callback);
     this.closeSlidingItemIfOpen();
+
     if ($event) {
       $event.target.complete();
     }
@@ -111,18 +126,21 @@ export class ShoppingListsPage implements OnInit {
 
   async logout(): Promise<void> {
     await this.userService.logout();
-    location.href = '/login';
+    this.router.navigate(['/login']);
+  }
+
+  open(shoppingList: ShoppingList) {
+    if (this.keyboardIsVisible || this.slidingItem) {
+      return;
+    }
+
+    this.router.navigate(['/shopping-lists', shoppingList.id]);
   }
 
   async delete(shoppingList: ShoppingList) {
-    const loading = await this.loading.create({
-      message: 'Der Ofen wird ausgeschaltet...'
-    });
-    loading.present();
-    this.shoppingListsService.destroy(shoppingList.id).then(() => {
-      loading.dismiss();
-    });
-    this.reload();
+    this.reload(false, () =>
+      this.shoppingListsService.destroy(shoppingList.id)
+    );
   }
 
   hideAllInputs() {
@@ -158,9 +176,7 @@ export class ShoppingListsPage implements OnInit {
     }
     const shoppingList = {} as ShoppingList;
     shoppingList.name = this.name;
-    this.shoppingListsService.insert(shoppingList).then(() => {
-      this.reload();
-    });
+    this.reload(false, () => this.shoppingListsService.insert(shoppingList));
   }
 
   showEditInput(shoppingList: ShoppingList) {
@@ -170,13 +186,13 @@ export class ShoppingListsPage implements OnInit {
       this.ionInput.setFocus();
     }, 400);
 
-    this.shoppingList = shoppingList;
+    this.editShoppingList = shoppingList;
     this.name = shoppingList.name;
     this.editInputIsVisible = true;
   }
 
   hideEditInput() {
-    this.shoppingList = null;
+    this.editShoppingList = null;
     this.name = null;
     this.editInputIsVisible = false;
     this.closeSlidingItemIfOpen();
@@ -194,11 +210,11 @@ export class ShoppingListsPage implements OnInit {
       return;
     }
 
-    this.shoppingListsService
-      .update(this.shoppingList.id, { name: this.name } as ShoppingList)
-      .then(() => {
-        this.reload();
-      });
+    this.reload(false, () =>
+      this.shoppingListsService.update(this.editShoppingList.id, {
+        name: this.name
+      } as ShoppingList)
+    );
   }
 
   async showShare(shoppingList: ShoppingList) {

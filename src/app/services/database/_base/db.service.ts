@@ -226,6 +226,10 @@ export abstract class DbService {
     this.deleteBy('id', id);
   }
 
+  public async batchDelete(ids: number[]): Promise<void> {
+    this.batchDeleteBy('id', ids);
+  }
+
   public async deleteBy(
     column: string,
     value: string | number | boolean
@@ -234,6 +238,19 @@ export abstract class DbService {
       value = `"${value}"`;
     }
     const query = `UPDATE ${this.table} SET deleted_at = datetime() WHERE ${column} = ${value}`;
+    this.query(query);
+  }
+
+  public async batchDeleteBy(
+    column: string,
+    values: string[] | number[] | boolean[]
+  ): Promise<void> {
+    let valueString = '';
+    values.forEach(value => {
+      valueString += this.parseInsertOrUpdateValue(value) + ', ';
+    });
+    valueString = valueString.trim().replace(/,+$/, '');
+    const query = `UPDATE ${this.table} SET deleted_at = datetime() WHERE ${column} IN (${valueString})`;
     this.query(query);
   }
 

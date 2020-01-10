@@ -15,13 +15,13 @@
 </ion-header>
 
 <ion-content (click)="closeSlidingItemIfOpen()">
-  <ion-refresher slot="fixed" (ionRefresh)="reload($event, true)">
+  <ion-refresher slot="fixed" (ionRefresh)="reload(true, null, $event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
 
   <ion-list *ngIf="itemsUndone?.length">
     <div *ngFor="let itemUndone of itemsUndone">
-      <ion-item-divider class="list-entry" (ionSwipe)="remove(itemUndone)">
+      <ion-item-divider class="list-entry">
         <ion-item-sliding #item (ionDrag)="itemOnSlide(item, $event)">
           <ion-item
             [class.line-through]="highlight?.id === itemUndone?.id"
@@ -35,17 +35,10 @@
             </div>
           </ion-item>
           <ion-item-options side="end">
-            <ion-item-option
-              color="primary"
-              [routerLink]="['/items', itemUndone.id, 'edit']"
-            >
+            <ion-item-option color="primary" (click)="edit(itemUndone)">
               <ion-icon name="create"></ion-icon>
             </ion-item-option>
-            <ion-item-option
-              color="danger"
-              expandable
-              (click)="remove(itemUndone)"
-            >
+            <ion-item-option color="danger" (click)="remove(itemUndone)">
               <ion-icon name="trash"></ion-icon>
             </ion-item-option>
           </ion-item-options>
@@ -64,7 +57,7 @@
       </ion-label>
     </ion-list-header>
     <div *ngFor="let itemDone of itemsDone">
-      <ion-item-divider class="list-entry" (ionSwipe)="remove(itemDone)">
+      <ion-item-divider class="list-entry">
         <ion-item-sliding #item (ionDrag)="itemOnSlide(item, $event)">
           <ion-item
             [class.line-through]="highlight?.id !== itemDone?.id"
@@ -78,17 +71,10 @@
             </div>
           </ion-item>
           <ion-item-options side="end">
-            <ion-item-option
-              color="primary"
-              [routerLink]="['/items', itemDone.id, 'edit']"
-            >
+            <ion-item-option color="primary" (click)="edit(itemDone)">
               <ion-icon name="create"></ion-icon>
             </ion-item-option>
-            <ion-item-option
-              color="danger"
-              expandable
-              (click)="remove(itemDone)"
-            >
+            <ion-item-option color="danger" (click)="remove(itemDone)">
               <ion-icon name="trash"></ion-icon>
             </ion-item-option>
           </ion-item-options>
