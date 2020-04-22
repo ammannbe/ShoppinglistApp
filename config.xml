@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="ch.narrenhaus.shoppinglist" version="0.0.7" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+<widget id="ch.narrenhaus.shoppinglist" version="0.0.8" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
     <name>Shopping list</name>
     <description>Einkaufslisten erstellen, verwalten und teilen.</description>
     <author email="beni.ammann99@gmail.com" href="https://github.com/ammannbe/">Benjamin Ammann</author>
@@ -93,6 +93,11 @@
         <splash height="2208" src="resources/ios/splash/Default-736h.png" width="1242" />
         <splash height="2436" src="resources/ios/splash/Default-2436h.png" width="1125" />
         <splash height="2732" src="resources/ios/splash/Default@2x~universal~anyany.png" width="2732" />
+        <icon height="216" src="resources/ios/icon/icon-108@2x.png" width="216" />
+        <splash height="2688" src="resources/ios/splash/Default-2688h~iphone.png" width="1242" />
+        <splash height="1242" src="resources/ios/splash/Default-Landscape-2688h~iphone.png" width="2688" />
+        <splash height="1792" src="resources/ios/splash/Default-1792h~iphone.png" width="828" />
+        <splash height="828" src="resources/ios/splash/Default-Landscape-1792h~iphone.png" width="1792" />
     </platform>
     <plugin name="cordova-plugin-whitelist" spec="1.3.3" />
     <plugin name="cordova-plugin-statusbar" spec="2.4.2" />
@@ -106,5 +111,5 @@
         <variable name="LIC_ANDROID" value="TRIAL" />
     </plugin>
     <plugin name="cordova-plugin-ionic-keyboard" spec="^2.2.0" />
-    <engine name="android" spec="^7.1.4" />
+    <engine name="android" spec="^8.1.0" />
 </widget>
