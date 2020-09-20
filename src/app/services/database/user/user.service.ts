@@ -43,7 +43,7 @@ export class UserService extends DbService {
     return email;
   }
 
-  public async offlineOny(): Promise<boolean> {
+  public async offlineOnly(): Promise<boolean> {
     const user = await this.first();
     let offlineOnly = false;
 

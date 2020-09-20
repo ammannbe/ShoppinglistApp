@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { UserService } from '../user/user.service';
 import { ToastService } from 'src/app/services/toast/toast.service';
 import { RegisterService } from 'src/app/services/api/register/register.service';
+import { LoadingService } from 'src/app/services/loading.service';
 
 @Component({
   selector: 'app-login',
@@ -18,36 +19,39 @@ export class LoginPage implements OnInit {
     private userService: UserService,
     private toast: ToastService,
     private registerService: RegisterService,
-    private router: Router
+    private router: Router,
+    private loading: LoadingService
   ) {}
 
   ngOnInit() {
-    setTimeout(() => {
-      this.userService.isLoggedIn().then(result => {
-        if (result) {
-          this.router.navigate(['/shopping-lists']);
-        }
-      });
+    this.redirectIfLoggedIn();
+  }
+
+  async redirectIfLoggedIn() {
+    setTimeout(async () => {
+      if (await this.userService.isLoggedIn()) {
+        this.router.navigate(['/shopping-lists']);
+      }
     }, 500);
   }
 
   async login() {
-    await this.userService
-      .login(this.email, this.password, true)
-      .then(result => {
-        this.registerService.status().subscribe(data => {
-          if (data.verified === true) {
-            this.router.navigate(['/shopping-lists']);
-          } else {
-            this.registerService.resend().subscribe(d => {
-              this.toast.show(d.message);
-            });
-          }
+    try {
+      await this.userService.login(this.email, this.password, true);
+    } catch (error) {
+      this.toast.showErrors(error);
+      return;
+    }
+
+    this.registerService.status().subscribe(data => {
+      if (data.verified === true) {
+        this.router.navigate(['/shopping-lists']);
+      } else {
+        this.registerService.resend().subscribe(d => {
+          this.toast.show(d.message);
         });
-      })
-      .catch(err => {
-        this.toast.showErrors(err);
-      });
+      }
+    });
   }
 
   async useOffline() {

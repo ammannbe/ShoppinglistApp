@@ -15,7 +15,7 @@ export class SyncHelperService {
 
   async canSync(force: boolean = false): Promise<boolean> {
     if (this.offlineOnly === null) {
-      this.offlineOnly = await this.userService.offlineOny();
+      this.offlineOnly = await this.userService.offlineOnly();
     }
     if (this.offlineOnly === true) {
       return;
@@ -31,6 +31,9 @@ export class SyncHelperService {
 
   startSync() {
     this.syncIsRunning = true;
+    setTimeout(() => {
+      this.stopSync();
+    }, 300000); // timeout after 5min
   }
 
   stopSync() {

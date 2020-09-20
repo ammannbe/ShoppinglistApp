@@ -14,7 +14,7 @@ export abstract class DbService {
 
   constructor(protected sqlite: SQLite, protected queries: QueriesService) {}
 
-  private async createDatabaseIfNotReady(firstRun = false): Promise<void> {
+  private async createDatabaseIfNotReady(): Promise<void> {
     if (this.database) {
       return;
     }
