@@ -19,8 +19,7 @@ export class LoginPage implements OnInit {
     private userService: UserService,
     private toast: ToastService,
     private registerService: RegisterService,
-    private router: Router,
-    private loading: LoadingService
+    private router: Router
   ) {}
 
   ngOnInit() {
@@ -38,20 +37,11 @@ export class LoginPage implements OnInit {
   async login() {
     try {
       await this.userService.login(this.email, this.password);
+      this.router.navigate(['/shopping-lists']);
     } catch (error) {
       this.toast.showErrors(error);
       return;
     }
-
-    this.registerService.status().subscribe(data => {
-      if (data.verified === true) {
-        this.router.navigate(['/shopping-lists']);
-      } else {
-        this.registerService.resend().subscribe(d => {
-          this.toast.show(d.message);
-        });
-      }
-    });
   }
 
   async useOffline() {

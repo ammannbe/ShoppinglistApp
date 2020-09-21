@@ -11,7 +11,7 @@ import { TokenService } from '../database/token/token.service';
   providedIn: 'root'
 })
 export class ApiService {
-  public HOST = 'https://shoppinglist-api.narrenhaus.ch';
+  public HOST = 'https://shoppinglist-api.narrenhaus.ch/api';
   private token: LoginToken | false;
 
   constructor(private http: HttpClient, private tokenService: TokenService) {}
@@ -36,7 +36,7 @@ export class ApiService {
 
     console.log('HTTP: Query token for header...');
     this.token = await this.tokenService.first();
-    if (this.token && (await this.tokenService.isValid())) {
+    if (this.token) {
       console.log('HTTP: Set token in Authorization header');
       headers = headers.set('Authorization', `Bearer ${this.token.token}`);
     }

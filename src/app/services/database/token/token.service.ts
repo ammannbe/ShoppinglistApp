@@ -16,7 +16,7 @@ export class TokenService extends DbService {
     super(sqlite, queries);
   }
 
-  public async first<Token = any>(): Promise<Token> {
+  public async first<Token>(): Promise<Token> {
     if (!this.token) {
       this.token = (await super.first<Token>()) as any;
     }
@@ -33,23 +33,5 @@ export class TokenService extends DbService {
   public async remove(): Promise<void> {
     delete this.token;
     await super.truncate();
-  }
-
-  public async isValid(): Promise<boolean> {
-    const token = await this.first();
-
-    if (!token) return false;
-
-    return new Date(token.expires_at) > new Date();
-  }
-
-  public async shouldRefresh(): Promise<boolean> {
-    const token = await this.first();
-
-    if (!token) return false;
-
-    const expiresAt = new Date(token.expires_at).getTime();
-    const now = new Date().getTime();
-    return expiresAt - now < 7200000; // 2h in milliseconds
   }
 }

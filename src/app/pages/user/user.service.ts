@@ -19,47 +19,25 @@ export class UserService {
     if (await this.dbUser.offlineOnly()) {
       return true;
     }
-    if (await this.tokenService.shouldRefresh()) {
-      try {
-        await this.loginSerivce.refresh();
-      } catch (error) {
-        if (error.status === 401) {
-          // The token can't be refreshed
-          this.tokenService.remove();
-          return false;
-        }
-      }
-    }
-    if (await this.tokenService.isValid()) {
+    if (await this.tokenService.first()) {
       return true;
     }
     return false;
   }
 
-  async login(
-    email: string,
-    password: string,
-    remember: boolean = false
-  ): Promise<boolean> {
-    await this.dbUser.insert({
-      email,
-      password,
-      offline_only: false
-    } as User);
-    await this.loginSerivce.login(email, password, remember);
+  async login(email: string, password: string): Promise<boolean> {
+    await this.dbUser.insert({ email, offline_only: false } as User);
+    await this.loginSerivce.login(email, password);
     return true;
   }
 
   async loginOffline(): Promise<void> {
-    await this.dbUser.insert({
-      email: 'app@local',
-      offline_only: true
-    } as User);
+    await this.dbUser.insert({ email: '-', offline_only: true } as User);
     await this.dbUser.setOfflineOnly(true);
   }
 
   async logout(): Promise<void> {
-    await this.dbUser.setOfflineOnly(false);
+    await this.dbUser.remove();
     await this.loginSerivce.logout();
   }
 

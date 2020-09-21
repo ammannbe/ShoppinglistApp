@@ -25,10 +25,7 @@ export class UserService extends DbService {
   }
 
   public async insert(user: User): Promise<void> {
-    if (await this.first()) {
-      return;
-    }
-
+    await this.remove();
     return super.insert(user);
   }
 
@@ -61,5 +58,10 @@ export class UserService extends DbService {
     }
 
     return super.update(user.id, { offline_only: isset });
+  }
+
+  public async remove(): Promise<void> {
+    delete this.user;
+    await super.truncate();
   }
 }

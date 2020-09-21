@@ -23,10 +23,6 @@ export class RegisterService {
     });
   }
 
-  status(): Observable<any> {
-    return this.api.get<any>(`${this.prefix}/status`);
-  }
-
   resend(): Observable<any> {
     return this.api.post<any>(`${this.prefix}/resend`);
   }

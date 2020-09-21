@@ -17,7 +17,6 @@ export class QueriesService {
       '(' +
       'id INTEGER PRIMARY KEY,' +
       'email varchar(255),' +
-      'password varchar(255),' +
       'offline_only TINYINT(1),' +
       'created_at TIMESTMAP,' +
       'updated_at TIMESTMAP,' +
@@ -33,8 +32,6 @@ export class QueriesService {
       ' token ' +
       '(' +
       'token varchar(255),' +
-      'expires_at TIMESTMAP,' +
-      'issued_at TIMESTMAP,' +
       'created_at TIMESTMAP,' +
       'updated_at TIMESTMAP,' +
       'deleted_at TIMESTAMP' +
