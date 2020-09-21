@@ -4,8 +4,8 @@ import { switchMap } from 'rxjs/operators';
 import { Observable } from 'rxjs';
 import { from } from 'rxjs';
 
-import { AuthService } from './auth.service';
 import { Token as LoginToken } from './login/token';
+import { TokenService } from '../database/token/token.service';
 
 @Injectable({
   providedIn: 'root'
@@ -14,7 +14,7 @@ export class ApiService {
   public HOST = 'https://shoppinglist-api.narrenhaus.ch';
   private token: LoginToken | false;
 
-  constructor(private http: HttpClient, private auth: AuthService) {}
+  constructor(private http: HttpClient, private tokenService: TokenService) {}
 
   async checkConnection(): Promise<any> {
     return await this.http
@@ -34,9 +34,9 @@ export class ApiService {
       'Content-Type': 'application/json; charset=utf-8'
     });
 
-    this.token = await this.auth.queryToken();
+    this.token = await this.tokenService.first();
     console.log('Queried token for header...');
-    if (this.token && this.auth.tokenIsValid()) {
+    if (this.token && (await this.tokenService.isValid())) {
       console.log('...set header...');
       headers = headers.set('Authorization', `Bearer ${this.token.token}`);
     }

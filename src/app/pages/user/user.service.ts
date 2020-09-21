@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 
 import { UserService as DbUserService } from '../../services/database/user/user.service';
-import { AuthService } from 'src/app/services/api/auth.service';
+import { TokenService } from '../../services/database/token/token.service';
 import { LoginService } from 'src/app/services/api/login/login.service';
 import { User } from 'src/app/services/database/user/user';
 
@@ -11,7 +11,7 @@ import { User } from 'src/app/services/database/user/user';
 export class UserService {
   constructor(
     private dbUser: DbUserService,
-    private authService: AuthService,
+    private tokenService: TokenService,
     private loginSerivce: LoginService
   ) {}
 
@@ -19,7 +19,12 @@ export class UserService {
     if (await this.dbUser.offlineOnly()) {
       return true;
     }
-    if (await this.authService.tokenIsValid()) {
+    if (await this.tokenService.shouldRefresh()) {
+      try {
+        await this.loginSerivce.refresh();
+      } catch (error) {}
+    }
+    if (await this.tokenService.isValid()) {
       return true;
     }
     return false;
