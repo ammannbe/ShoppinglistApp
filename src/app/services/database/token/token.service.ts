@@ -25,38 +25,29 @@ export class TokenService extends DbService {
   }
 
   public async insert(token: Token): Promise<void> {
-    super.insert(token);
+    await this.remove();
+    await super.insert(token);
+    this.token = await this.first();
   }
 
   public async remove(): Promise<void> {
-    super.truncate();
-  }
-
-  public async queryToken(): Promise<Token | false> {
-    const token = await this.first();
-
-    if (!token) {
-      return false;
-    }
-
-    if (!(await this.isValid())) {
-      return false;
-    }
-
-    return token;
+    delete this.token;
+    await super.truncate();
   }
 
   public async isValid(): Promise<boolean> {
     const token = await this.first();
-    if (!token) {
-      return false;
-    }
-    const expiresAt = token.expires_at;
-    return new Date(expiresAt) > new Date();
+
+    if (!token) return false;
+
+    return new Date(token.expires_at) > new Date();
   }
 
   public async shouldRefresh(): Promise<boolean> {
     const token = await this.first();
+
+    if (!token) return false;
+
     const expiresAt = new Date(token.expires_at).getTime();
     const now = new Date().getTime();
     return expiresAt - now < 7200000; // 2h in milliseconds

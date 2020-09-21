@@ -22,7 +22,13 @@ export class UserService {
     if (await this.tokenService.shouldRefresh()) {
       try {
         await this.loginSerivce.refresh();
-      } catch (error) {}
+      } catch (error) {
+        if (error.status === 401) {
+          // The token can't be refreshed
+          this.tokenService.remove();
+          return false;
+        }
+      }
     }
     if (await this.tokenService.isValid()) {
       return true;

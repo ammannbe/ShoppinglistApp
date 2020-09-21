@@ -43,7 +43,7 @@ export abstract class DbService {
   private async query(query: string): Promise<any> {
     await this.createDatabaseIfNotReady();
 
-    console.log(query);
+    console.log(`SQL: ${query}`);
     return this.database.executeSql(query, []).catch(e => {
       alert(`Error executing query:\n${query}\nError:\n` + JSON.stringify(e));
     });

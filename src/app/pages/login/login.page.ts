@@ -37,7 +37,7 @@ export class LoginPage implements OnInit {
 
   async login() {
     try {
-      await this.userService.login(this.email, this.password, true);
+      await this.userService.login(this.email, this.password);
     } catch (error) {
       this.toast.showErrors(error);
       return;

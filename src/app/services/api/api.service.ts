@@ -34,17 +34,17 @@ export class ApiService {
       'Content-Type': 'application/json; charset=utf-8'
     });
 
+    console.log('HTTP: Query token for header...');
     this.token = await this.tokenService.first();
-    console.log('Queried token for header...');
     if (this.token && (await this.tokenService.isValid())) {
-      console.log('...set header...');
+      console.log('HTTP: Set token in Authorization header');
       headers = headers.set('Authorization', `Bearer ${this.token.token}`);
     }
     return headers;
   }
 
   get<T>(url: string): Observable<any> {
-    console.log(`HTTP - GET ${url}`);
+    console.log(`HTTP: GET    ${url}`);
     return from(this.queryHeaders()).pipe(
       switchMap(headers => {
         return this.http.get<T>(this.HOST + url, { headers });
@@ -53,7 +53,8 @@ export class ApiService {
   }
 
   post<T>(url: string, data: object = {}): Observable<T> {
-    console.log(`HTTP - POST ${url} - ${JSON.stringify(data)}`);
+    console.log(`HTTP: POST   ${url}`);
+    console.log(`      ${JSON.stringify(data)}`);
     return from(this.queryHeaders()).pipe(
       switchMap(headers => {
         return this.http.post<T>(this.HOST + url, data, { headers });
@@ -62,7 +63,8 @@ export class ApiService {
   }
 
   patch<T>(url: string, data?: object): Observable<T> {
-    console.log(`HTTP - PATCH ${url} - ${JSON.stringify(data)}`);
+    console.log(`HTTP: PATCH  ${url}`);
+    console.log(`      ${JSON.stringify(data)}`);
     return from(this.queryHeaders()).pipe(
       switchMap(headers => {
         return this.http.patch<T>(this.HOST + url, data, { headers });
@@ -71,7 +73,8 @@ export class ApiService {
   }
 
   put<T>(url: string, data?: object): Observable<T> {
-    console.log(`HTTP - PUT ${url} - ${JSON.stringify(data)}`);
+    console.log(`HTTP: PUT    ${url}`);
+    console.log(`      ${JSON.stringify(data)}`);
     return from(this.queryHeaders()).pipe(
       switchMap(headers => {
         return this.http.put<T>(this.HOST + url, data, { headers });
@@ -80,7 +83,7 @@ export class ApiService {
   }
 
   delete<T>(url: string): Observable<T> {
-    console.log(`HTTP - DELETE ${url}`);
+    console.log(`HTTP: DELETE ${url}`);
     return from(this.queryHeaders()).pipe(
       switchMap(headers => {
         return this.http.delete<T>(this.HOST + url, { headers });

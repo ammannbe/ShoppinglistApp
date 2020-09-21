@@ -12,11 +12,7 @@ export class LoginService {
 
   constructor(private api: ApiService, private token: TokenService) {}
 
-  async login(
-    email: string,
-    password: string,
-    remember: boolean = false
-  ): Promise<void> {
+  async login(email: string, password: string, remember = true): Promise<void> {
     await this.logout();
 
     const token = await this.api
@@ -36,9 +32,15 @@ export class LoginService {
   }
 
   async refresh(): Promise<void> {
-    const token = await this.api
-      .post<LoginToken>(`${this.prefix}/refresh`)
-      .toPromise();
-    await this.token.insert(token);
+    try {
+      const token = await this.api
+        .post<LoginToken>(`${this.prefix}/login/refresh`)
+        .toPromise();
+      await this.token.insert(token);
+    } catch (error) {
+      if (error.status === 401) {
+        await this.token.remove();
+      }
+    }
   }
 }
