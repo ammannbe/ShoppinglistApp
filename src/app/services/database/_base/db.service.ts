@@ -122,8 +122,8 @@ export abstract class DbService {
     return data[0];
   }
 
-  public async findByRemoteId<T = any>(remote_id: number): Promise<T> {
-    const data = await this.select<T>({ remote_id });
+  public async findByRemoteId<T = any>(remoteId: number): Promise<T> {
+    const data = await this.select<T>({ remote_id: remoteId });
     return data[0];
   }
 
