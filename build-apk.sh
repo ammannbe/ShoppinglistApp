@@ -8,7 +8,7 @@
 
 # Here are the APK releases
 release_dir="platforms/android/app/build/outputs/apk/release"
-app_name="ShoppingList"
+app_name="Shoppinglist"
 
 # Default build tool version
 sdk_version="28.0.3"

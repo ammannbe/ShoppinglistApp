@@ -1,4 +1,4 @@
-# ShoppingListApp
+# Shoppinglist App
 
 Mobile application to manage your shopping lists, written with Ionic, Cordova and TypeScript.
 Manage your shopping lists and share them with your family and flatmates.
@@ -16,7 +16,7 @@ Manage your shopping lists and share them with your family and flatmates.
 Download repository
 
 ```bash
-git clone https://git.narrenhaus.ch/Narrenhaus/ShoppingListApp.git
+git clone https://github.com/ammannbe/ShoppinglistApp.git
 ```
 
 ### Prerequisites
@@ -56,13 +56,13 @@ ionic cordova build android --prod --release
 - Rename APK
 
 ```bash
-mv ./platforms/android/app/build/outputs/apk/release/app-release-unsigned.apk ./platforms/android/app/build/outputs/apk/release/ShoppingList-release-unsigned.apk
+mv ./platforms/android/app/build/outputs/apk/release/app-release-unsigned.apk ./platforms/android/app/build/outputs/apk/release/Shoppinglist-release-unsigned.apk
 ```
 
 - Sign APK
 
 ```bash
-jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore ShoppingList-release-key.keystore ./platforms/android/app/build/outputs/apk/release/ShoppingList-release-unsigned.apk alias_name
+jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore Shoppinglist-release-key.keystore ./platforms/android/app/build/outputs/apk/release/Shoppinglist-release-unsigned.apk alias_name
 ```
 
 - Optimize APK with the `zipalign`-utility
@@ -71,7 +71,7 @@ Existiert im Ordner `$HOME/Android/Sdk/build-tools/[VERSION]/zipalign`
 
 ```bash
 $version="28.0.3"
-$HOME/Android/Sdk/build-tools/$version/zipalign -v 4 platforms/android/app/build/outputs/apk/release/ShoppingList-release-unsigned.apk platforms/android/app/build/outputs/apk/release/ShoppingList.apk
+$HOME/Android/Sdk/build-tools/$version/zipalign -v 4 platforms/android/app/build/outputs/apk/release/Shoppinglist-release-unsigned.apk platforms/android/app/build/outputs/apk/release/Shoppinglist.apk
 ```
 
 ## Deploy on Apples App Store
@@ -91,7 +91,7 @@ open platforms/ios/Todo\ Liste.xcodeproj
 
 - Change emulator to "Generic iOS Device"
 - Check Identity:
-  - Name: ShoppingList
+  - Name: Shoppinglist
   - Bundle ID: (not ready yet)
   - Version & Build according to config.xml
 - Go to Product > Archive (if the build failes, check the settings)
