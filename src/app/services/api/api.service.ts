@@ -4,15 +4,13 @@ import { switchMap } from 'rxjs/operators';
 import { Observable } from 'rxjs';
 import { from } from 'rxjs';
 
-import { Token as LoginToken } from './login/token';
-import { TokenService } from '../database/token/token.service';
+import { TokenService } from '../storage/token/token.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ApiService {
   public HOST = 'https://shoppinglist-api.narrenhaus.ch/api';
-  private token: LoginToken | false;
 
   constructor(private http: HttpClient, private tokenService: TokenService) {}
 
@@ -35,10 +33,10 @@ export class ApiService {
     });
 
     console.log('HTTP: Query token for header...');
-    this.token = await this.tokenService.first();
-    if (this.token) {
-      console.log('HTTP: Set token in Authorization header');
-      headers = headers.set('Authorization', `Bearer ${this.token.token}`);
+    const token = await this.tokenService.get();
+    if (token) {
+      console.log(`HTTP: Set token in Authorization header: ${token}`);
+      headers = headers.set('Authorization', `Bearer ${token}`);
     }
     return headers;
   }

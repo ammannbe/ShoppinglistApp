@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 
 import { UserService as DbUserService } from '../../services/database/user/user.service';
-import { TokenService } from '../../services/database/token/token.service';
+import { TokenService } from 'src/app/services/storage/token/token.service';
 import { LoginService } from 'src/app/services/api/login/login.service';
 import { User } from 'src/app/services/database/user/user';
 
@@ -19,7 +19,7 @@ export class UserService {
     if (await this.dbUser.offlineOnly()) {
       return true;
     }
-    if (await this.tokenService.first()) {
+    if (await this.tokenService.exists()) {
       return true;
     }
     return false;
