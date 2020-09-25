@@ -14,8 +14,8 @@ export class ApiService {
 
   constructor(private http: HttpClient, private tokenService: TokenService) {}
 
-  async checkConnection(): Promise<any> {
-    return await this.http
+  async checkConnection(): Promise<boolean> {
+    const response = await this.http
       .get(this.HOST + '/im-a-teapot')
       .toPromise()
       .then(data => {
@@ -24,6 +24,8 @@ export class ApiService {
       .catch(err => {
         return err;
       });
+
+    return response.status === 418;
   }
 
   private async queryHeaders(): Promise<HttpHeaders> {

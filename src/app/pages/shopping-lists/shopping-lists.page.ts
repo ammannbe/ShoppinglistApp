@@ -5,7 +5,7 @@ import { Keyboard } from '@ionic-native/keyboard/ngx';
 import { StatusBar } from '@ionic-native/status-bar/ngx';
 
 import { ShoppingList } from 'src/app/services/database/shopping-lists/shopping-list';
-import { User } from 'src/app/services/database/user/user';
+import { User } from './../user/user';
 import { UserService } from '../user/user.service';
 import { ShoppingListsService } from './shopping-lists.service';
 import { UtilHelperService } from 'src/app/services/util-helper.service';

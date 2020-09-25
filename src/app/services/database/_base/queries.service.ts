@@ -7,38 +7,6 @@ export class QueriesService {
   private create = 'CREATE TABLE IF NOT EXISTS';
   // private drop = 'DROP TABLE';
 
-  constructor() {}
-
-  public user(): string {
-    // return `${this.drop} user`; // For debugging only
-    return (
-      this.create +
-      ' user ' +
-      '(' +
-      'id INTEGER PRIMARY KEY,' +
-      'email varchar(255),' +
-      'offline_only TINYINT(1),' +
-      'created_at TIMESTMAP,' +
-      'updated_at TIMESTMAP,' +
-      'deleted_at TIMESTAMP' +
-      ')'
-    );
-  }
-
-  public token(): string {
-    // return `${this.drop} token`; // For debugging only
-    return (
-      this.create +
-      ' token ' +
-      '(' +
-      'token varchar(255),' +
-      'created_at TIMESTMAP,' +
-      'updated_at TIMESTMAP,' +
-      'deleted_at TIMESTAMP' +
-      ')'
-    );
-  }
-
   public products(): string {
     // return `${this.drop} products`; // For debugging only
     return (

@@ -32,8 +32,6 @@ export abstract class DbService {
   }
 
   private async createTables() {
-    await this.query(this.queries.user());
-    await this.query(this.queries.token());
     await this.query(this.queries.products());
     await this.query(this.queries.units());
     await this.query(this.queries.shoppingLists());

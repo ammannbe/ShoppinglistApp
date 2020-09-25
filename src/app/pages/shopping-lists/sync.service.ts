@@ -6,7 +6,7 @@ import { ShoppingListSharesService as ApiShoppingListShareService } from '../../
 import { ShoppingList as DbShoppingList } from 'src/app/services/database/shopping-lists/shopping-list';
 import { ShoppingList as ApiShoppingList } from 'src/app/services/api/shopping-lists/shopping-list';
 import { SyncHelperService } from 'src/app/services/api/sync-helper.service';
-import { UserService } from 'src/app/services/database/user/user.service';
+import { UserService } from 'src/app/services/storage/user/user.service';
 
 @Injectable({
   providedIn: 'root'
@@ -63,8 +63,11 @@ export class SyncService {
         let remoteDeleted = true;
         if (localItem.remote_id) {
           this.apiChanges = true;
+          const user = await this.userService.get();
+          if (!user) {
+            return;
+          }
           try {
-            const user = await this.userService.first();
             if (localItem.owner_email === user.email) {
               await this.apiShoppingListService
                 .destroy(localItem.remote_id)

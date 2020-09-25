@@ -1,22 +1,24 @@
+import { User } from './user';
 import { Injectable } from '@angular/core';
 
-import { UserService as DbUserService } from '../../services/database/user/user.service';
+import { UserService as StorageUserService } from '../../services/storage/user/user.service';
 import { TokenService } from 'src/app/services/storage/token/token.service';
 import { LoginService } from 'src/app/services/api/login/login.service';
-import { User } from 'src/app/services/database/user/user';
+import { OfflineModeService } from 'src/app/services/storage/offline-mode/offline-mode.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class UserService {
   constructor(
-    private dbUser: DbUserService,
+    private storageUserService: StorageUserService,
+    private offlineModeService: OfflineModeService,
     private tokenService: TokenService,
     private loginSerivce: LoginService
   ) {}
 
   public async isLoggedIn(): Promise<boolean> {
-    if (await this.dbUser.offlineOnly()) {
+    if (await this.offlineModeService.enabled()) {
       return true;
     }
     if (await this.tokenService.exists()) {
@@ -26,22 +28,23 @@ export class UserService {
   }
 
   async login(email: string, password: string): Promise<boolean> {
-    await this.dbUser.insert({ email, offline_only: false } as User);
+    await this.offlineModeService.disable();
+    await this.storageUserService.set({ email });
     await this.loginSerivce.login(email, password);
     return true;
   }
 
   async loginOffline(): Promise<void> {
-    await this.dbUser.insert({ email: '-', offline_only: true } as User);
-    await this.dbUser.setOfflineOnly(true);
+    await this.offlineModeService.enable();
   }
 
   async logout(): Promise<void> {
-    await this.dbUser.remove();
+    await this.offlineModeService.remove();
+    await this.storageUserService.remove();
     await this.loginSerivce.logout();
   }
 
   async show(): Promise<User> {
-    return await this.dbUser.first();
+    return await this.storageUserService.get();
   }
 }

@@ -1,17 +1,18 @@
 import { Injectable } from '@angular/core';
 import { StorageService } from './../storage.service';
+import { User } from './../../../pages/user/user';
 
 @Injectable({
   providedIn: 'root'
 })
-export class TokenService extends StorageService {
-  private key = 'token';
+export class UserService extends StorageService {
+  private key = 'user';
 
-  public async set({ token }: { token: string }): Promise<string> {
-    return super.set(this.key, token);
+  public async set(user: User): Promise<User> {
+    return super.set(this.key, user);
   }
 
-  public async get(): Promise<string> {
+  public async get(): Promise<User> {
     return super.get(this.key);
   }
 

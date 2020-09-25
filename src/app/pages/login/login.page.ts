@@ -3,8 +3,6 @@ import { Router } from '@angular/router';
 
 import { UserService } from '../user/user.service';
 import { ToastService } from 'src/app/services/toast/toast.service';
-import { RegisterService } from 'src/app/services/api/register/register.service';
-import { LoadingService } from 'src/app/services/loading.service';
 
 @Component({
   selector: 'app-login',
@@ -18,7 +16,6 @@ export class LoginPage implements OnInit {
   constructor(
     private userService: UserService,
     private toast: ToastService,
-    private registerService: RegisterService,
     private router: Router
   ) {}
 

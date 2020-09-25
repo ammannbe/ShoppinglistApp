@@ -6,7 +6,7 @@ import { ItemsService } from '../items.service';
 import { ShoppingListsService } from '../../shopping-lists/shopping-lists.service';
 import { ShoppingList } from 'src/app/services/database/shopping-lists/shopping-list';
 import { Item } from 'src/app/services/database/items/item';
-import { UserService } from 'src/app/services/database/user/user.service';
+import { UserService } from 'src/app/services/storage/user/user.service';
 import { ToastService } from 'src/app/services/toast/toast.service';
 import { ProductsService } from '../../products/products.service';
 import { Product } from '../../products/product';
@@ -107,14 +107,14 @@ export class AddPage implements OnInit {
 
     await this.addProduct(this.product);
 
-    const email = await this.userService.getEmail();
+    const user = await this.userService.get();
     const item: Item = {
       id: null,
       remote_id: null,
       shopping_list_id: this.shoppingList.id,
       product_name: this.product,
       unit_name: this.unit,
-      creator_email: email,
+      creator_email: user.email || null,
       amount: this.amount,
       done: false,
       created_at: null,
