@@ -5,47 +5,43 @@ import { Storage } from '@ionic/storage';
   providedIn: 'root'
 })
 export class StorageService {
-  constructor(private storage: Storage) {}
+  private _cache = [];
+
+  constructor(protected storage: Storage) {}
+
+  public async get(key: any): Promise<any> {
+    if (this._cache[key]) {
+      console.log(`STORAGE: CACHED ${key} ; ${this._cache[key]}`);
+    } else {
+      this._cache[key] = await this.storage.get(key);
+      console.log(`STORAGE: GET    ${key} ; ${this._cache[key]}`);
+    }
+    return JSON.parse(this._cache[key]);
+  }
 
   public async set(key: any, value: any): Promise<any> {
+    delete this._cache[key];
     value = JSON.stringify(value);
     console.log(`STORAGE: SET    ${key} ; ${value}`);
     return await this.storage.set(key, value);
   }
 
-  public async get(key: any): Promise<any> {
-    const value = await this.storage.get(key);
-    console.log(`STORAGE: GET    ${key} ; ${value}`);
-    return JSON.parse(value);
-  }
-
-  public async update(
-    key: any,
-    property: string | number,
-    value: any
-  ): Promise<void> {
-    console.log(`STORAGE: UPDATE ${key} ; ${property} ; ${value}`);
-    let el = await this.get(key);
-    if (typeof el === 'object' && el !== null) {
-      el[property] = value;
-    }
-    if (el === null) {
-      el = { [property]: value };
-    }
-    await this.set(key, el);
-  }
-
   public async exists(key: any): Promise<boolean> {
+    if (this._cache[key]) {
+      return !!this._cache[key];
+    }
     console.log(`STORAGE: EXISTS ${key}`);
     return !!(await this.get(key));
   }
 
   public async remove(key: any): Promise<void> {
+    delete this._cache[key];
     console.log(`STORAGE: REMOVE ${key}`);
     await this.storage.remove(key);
   }
 
   public async clear(): Promise<void> {
+    this._cache = [];
     console.log(`STORAGE: CLEAR`);
     await this.storage.clear();
   }

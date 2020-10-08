@@ -15,7 +15,7 @@
 </ion-header>
 
 <ion-content (click)="closeSlidingItemIfOpen()">
-  <ion-refresher slot="fixed" (ionRefresh)="reload(true, null, $event)">
+  <ion-refresher slot="fixed" (ionRefresh)="reload(true, false, $event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
 
@@ -28,6 +28,11 @@
             (click)="done(itemUndone)"
           >
             <div>
+              <span
+                *ngIf="isUuid(itemUndone?.id) || itemUndone?.deleted_at"
+                style="color: red"
+                >&bull;</span
+              >
               <small>
                 {{ itemUndone.amount || '' }} {{ itemUndone.unit_name || '' }}
               </small>
@@ -64,6 +69,11 @@
             (click)="undone(itemDone)"
           >
             <div>
+              <span
+                style="color: red"
+                *ngIf="isUuid(itemDone?.id) || itemDone?.deleted_at"
+                >&bull;</span
+              >
               <small>
                 {{ itemDone.amount || '' }} {{ itemDone.unit_name || '' }}
               </small>

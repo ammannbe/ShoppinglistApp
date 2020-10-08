@@ -1,13 +1,14 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AlertController } from '@ionic/angular';
+import { v4 as uuid, validate as validateUuid } from 'uuid';
 
-import { ShoppingListsService } from '../shopping-lists/shopping-lists.service';
-import { ItemsService } from './items.service';
-import { Item } from 'src/app/services/database/items/item';
-import { ShoppingList } from 'src/app/services/database/shopping-lists/shopping-list';
-import { UtilHelperService } from 'src/app/services/util-helper.service';
-import { LoadingService } from 'src/app/services/loading.service';
+import { ShoppingListService } from './../../services/storage/shopping-list/shopping-list.service';
+import { ShoppingList } from 'src/app/services/storage/shopping-list/shopping-list';
+
+import { ItemService } from './../../services/storage/item/item.service';
+import { Item } from 'src/app/services/storage/item/item';
+import { ItemSyncService } from 'src/app/services/sync/item/item-sync.service';
 
 @Component({
   selector: 'app-items',
@@ -26,34 +27,41 @@ export class ItemsPage implements OnInit {
   public highlight: Item = null;
 
   constructor(
-    private itemService: ItemsService,
-    private shoppingListService: ShoppingListsService,
-    private utilHelper: UtilHelperService,
-    private loading: LoadingService,
+    private itemService: ItemService,
+    private itemSyncService: ItemSyncService,
+    private shoppingListService: ShoppingListService,
     private activatedRoute: ActivatedRoute,
     private router: Router,
     private alertController: AlertController
   ) {
     setTimeout(() => {
-      this.activatedRoute.paramMap.subscribe(paramMap => {
+      this.activatedRoute.paramMap.subscribe(async paramMap => {
         if (!paramMap.has('id')) {
           this.router.navigate(['/shopping-lists']);
           return;
         }
-        this.shoppingListService
-          .find(+paramMap.get('id'))
-          .then(shoppingList => {
-            this.shoppingList = shoppingList;
-            this.load();
-          })
-          .catch(e => {
-            alert('error ' + JSON.stringify(e));
-          });
+
+        let id: string | number;
+        if (this.isUuid(paramMap.get('id'))) {
+          id = paramMap.get('id');
+        } else {
+          id = +paramMap.get('id');
+        }
+
+        this.shoppingList = await this.shoppingListService.find(id);
+        this.itemSyncService.setShoppingListId(this.shoppingList.id);
+        await this.load(true);
+
+        setInterval(() => this.load(true), 30000);
       });
-    }, 200);
+    }, 500);
   }
 
   ngOnInit() {}
+
+  public isUuid(value: any) {
+    return validateUuid(value);
+  }
 
   itemOnSlide(slidingItem, $event) {
     // ratio > 0 == opening
@@ -67,46 +75,44 @@ export class ItemsPage implements OnInit {
   }
 
   closeSlidingItemIfOpen() {
-    if (this.slidingItemIsOpen()) {
+    if (!!this.slidingItem) {
       this.slidingItem.close();
       this.slidingItem = null;
     }
   }
 
-  slidingItemIsOpen(): boolean {
-    return !!this.slidingItem;
-  }
-
-  async load(forceSync: boolean = false, callback = null) {
-    await this.loading.show();
-
-    if (callback !== null) {
-      callback();
+  async load(sync = false, onlyPush = false) {
+    if (sync) {
+      this.itemSyncService.sync(onlyPush);
     }
 
     this.hasItems = true;
-    this.itemsDone = [];
-    this.itemsUndone = [];
+    const done = [];
+    const undone = [];
 
-    let items = await this.itemService.index(this.shoppingList, forceSync);
-    items = this.utilHelper.sortBy('product_name', items);
+    let items = await this.itemService.get();
+    items = items.filter(i => i.shopping_list_id === this.shoppingList.id);
+    items = items.sort((a, b) => a.product_name.localeCompare(b.product_name));
+
     if (!items.length) {
       this.hasItems = false;
     }
+
     items.forEach(item => {
       if (item.done) {
-        this.itemsDone.push(item);
+        done.push(item);
       } else {
-        this.itemsUndone.push(item);
+        undone.push(item);
       }
     });
+    this.itemsDone = done;
+    this.itemsUndone = undone;
 
     this.unhighlightItem();
-    await this.loading.dismiss();
   }
 
-  reload(forceSync: boolean = false, callback = null, $event: any = null) {
-    this.load(forceSync, callback);
+  async reload(sync = false, onlyPush = false, $event = null) {
+    await this.load(sync, onlyPush);
     this.closeSlidingItemIfOpen();
 
     if ($event) {
@@ -114,8 +120,8 @@ export class ItemsPage implements OnInit {
     }
   }
 
-  done(item: Item) {
-    if (this.slidingItemIsOpen()) {
+  async done(item: Item) {
+    if (!!this.slidingItem) {
       return false;
     }
     if (this.keyboardIsVisible) {
@@ -123,13 +129,12 @@ export class ItemsPage implements OnInit {
     }
     item.done = true;
     this.highlightItem(item);
-    this.reload(false, () =>
-      this.itemService.update(item.id, this.shoppingList, item)
-    );
+    await this.itemService.update(item, item);
+    this.reload(true, true);
   }
 
-  undone(item: Item) {
-    if (this.slidingItemIsOpen()) {
+  async undone(item: Item) {
+    if (!!this.slidingItem) {
       return false;
     }
     if (this.keyboardIsVisible) {
@@ -137,9 +142,8 @@ export class ItemsPage implements OnInit {
     }
     item.done = false;
     this.highlightItem(item);
-    this.reload(false, () =>
-      this.itemService.update(item.id, this.shoppingList, item)
-    );
+    await this.itemService.update(item, item);
+    this.reload(true, true);
   }
 
   private highlightItem(item: Item) {
@@ -164,9 +168,8 @@ export class ItemsPage implements OnInit {
       return;
     }
 
-    this.reload(false, () =>
-      this.itemService.batchDestroy(this.shoppingList, items)
-    );
+    await this.itemService.batchRemove(items);
+    await this.reload(true);
   }
 
   async removeConfirmation(items: Item[]): Promise<boolean> {
@@ -178,15 +181,11 @@ export class ItemsPage implements OnInit {
           {
             text: 'Nein',
             role: 'cancel',
-            handler: () => {
-              return resolve(false);
-            }
+            handler: () => resolve(false)
           },
           {
             text: 'Ja',
-            handler: () => {
-              return resolve(true);
-            }
+            handler: () => resolve(true)
           }
         ]
       });

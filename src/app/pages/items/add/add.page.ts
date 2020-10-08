@@ -1,19 +1,24 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AlertController, IonInput } from '@ionic/angular';
-
-import { ItemsService } from '../items.service';
-import { ShoppingListsService } from '../../shopping-lists/shopping-lists.service';
-import { ShoppingList } from 'src/app/services/database/shopping-lists/shopping-list';
-import { Item } from 'src/app/services/database/items/item';
-import { UserService } from 'src/app/services/storage/user/user.service';
+import { v4 as uuid, validate as isUuid } from 'uuid';
 import { ToastService } from 'src/app/services/toast/toast.service';
-import { ProductsService } from '../../products/products.service';
-import { Product } from '../../products/product';
-import { UtilHelperService } from 'src/app/services/util-helper.service';
-import { UnitsService } from '../../units/units.service';
-import { LoadingService } from 'src/app/services/loading.service';
-import { Unit } from 'src/app/services/database/units/unit';
+
+import { ItemService } from 'src/app/services/storage/item/item.service';
+import { Item } from 'src/app/services/storage/item/item';
+
+import { ShoppingListService } from 'src/app/services/storage/shopping-list/shopping-list.service';
+import { ShoppingList } from 'src/app/services/storage/shopping-list/shopping-list';
+
+import { UnitService } from 'src/app/services/storage/unit/unit.service';
+import { UnitSyncService } from 'src/app/services/sync/unit/unit-sync.service';
+import { Unit } from 'src/app/services/storage/unit/unit';
+
+import { ProductService } from 'src/app/services/storage/product/product.service';
+import { ProductSyncService } from 'src/app/services/sync/product/product-sync.service';
+import { Product } from 'src/app/services/storage/product/product';
+
+import { UserService } from 'src/app/services/storage/user/user.service';
 
 @Component({
   selector: 'app-add',
@@ -32,33 +37,36 @@ export class AddPage implements OnInit {
   public product: string = null;
 
   constructor(
-    private itemService: ItemsService,
+    private itemService: ItemService,
     private userService: UserService,
-    private unitService: UnitsService,
-    private shoppingListService: ShoppingListsService,
-    private productService: ProductsService,
+    private unitService: UnitService,
+    private shoppingListService: ShoppingListService,
+    private productService: ProductService,
+    private productSyncService: ProductSyncService,
+    private unitSyncService: UnitSyncService,
     private toast: ToastService,
-    private loading: LoadingService,
-    private utilHelper: UtilHelperService,
     private activatedRoute: ActivatedRoute,
     private router: Router,
     private alertController: AlertController
   ) {
     setTimeout(() => {
-      this.activatedRoute.paramMap.subscribe(paramMap => {
+      this.activatedRoute.paramMap.subscribe(async paramMap => {
         if (!paramMap.has('id')) {
           this.router.navigate(['/shopping-lists']);
           return;
         }
-        this.shoppingListService
-          .find(+paramMap.get('id'))
-          .then(shoppingList => {
-            this.shoppingList = shoppingList;
-            this.load();
-          })
-          .catch(e => {
-            alert('error ' + JSON.stringify(e));
-          });
+
+        let id: string | number;
+        if (isUuid(paramMap.get('id'))) {
+          id = paramMap.get('id');
+        } else {
+          id = +paramMap.get('id');
+        }
+
+        this.shoppingList = await this.shoppingListService.find(id);
+        await this.load(true);
+
+        setInterval(() => this.load(true), 30000);
       });
     }, 200);
   }
@@ -69,36 +77,34 @@ export class AddPage implements OnInit {
     }, 200);
   }
 
-  async load(forceSync: boolean = false, callback = null) {
-    this.loading.show();
-
-    if (callback !== null) {
-      callback();
+  async load(sync = false, onlyPush = false) {
+    if (sync) {
+      await this.unitSyncService.sync(onlyPush);
+      await this.productSyncService.sync(onlyPush);
     }
 
-    try {
-      this.products = this.utilHelper.sort(
-        await this.productService.index(forceSync)
-      );
-      this.productsSearch = this.products;
-      this.units = this.utilHelper.sort(
-        await this.unitService.index(forceSync)
-      );
-    } catch (error) {}
-
-    this.loading.dismiss();
+    this.products = (await this.productService.get()).sort((a, b) =>
+      a.name.localeCompare(b.name)
+    );
+    this.productsSearch = this.products;
+    this.units = (await this.unitService.get()).sort((a, b) =>
+      a.name.localeCompare(b.name)
+    );
   }
 
-  reload(forceSync: boolean = false, callback = null, $event: any = null) {
-    this.load(forceSync, callback);
+  async reload(sync = false, onlyPush = false, $event: any = null) {
+    await this.load(sync, onlyPush);
+
     if ($event) {
       $event.target.complete();
     }
   }
 
   async add() {
-    this.product = this.utilHelper.parseAndTrim(this.product);
-    this.unit = this.utilHelper.parseAndTrim(this.unit);
+    const product = this.product || '';
+    const unit = this.unit || '';
+    this.product = product.trim();
+    this.unit = unit.trim();
 
     if (!this.product.length) {
       alert('Das Produkt fehlt!');
@@ -109,8 +115,7 @@ export class AddPage implements OnInit {
 
     const user = await this.userService.get();
     const item: Item = {
-      id: null,
-      remote_id: null,
+      id: uuid(),
       shopping_list_id: this.shoppingList.id,
       product_name: this.product,
       unit_name: this.unit,
@@ -121,55 +126,35 @@ export class AddPage implements OnInit {
       updated_at: null,
       deleted_at: null
     };
-    const items = await this.itemService.index(this.shoppingList);
-    let found = null;
-    if (items.length) {
-      found = items.find(i => {
-        return i.product_name === item.product_name;
-      });
-    }
-    if (items.length && found) {
+
+    const elements = await this.itemService.searchByProduct(
+      this.shoppingList.id,
+      this.product
+    );
+
+    if (elements.length) {
       const alert = await this.alertController.create({
         header: 'Eintrag existiert bereits.',
         message:
-          'Es existiert bereits ein Eintrag mit diesem Produkt. Einträge zusammenführen?',
+          'Ein Eintrag mit diesem Namen existiert bereits. Zusammenführen?',
         buttons: [
-          {
-            text: 'Abbrechen',
-            role: 'cancel',
-            handler: () => {}
-          },
+          { text: 'Abbrechen', role: 'cancel' },
           {
             text: 'Nein',
-            handler: () => {
-              this.itemService.insert(this.shoppingList, item);
-              this.toast.show(
-                `${item.amount || ''} ${item.unit_name || ''} ${
-                  item.product_name
-                } hinzugefügt.`
-              );
-            }
+            handler: () => this.addNewItem(item)
           },
           {
             text: 'Ja, zusammenführen',
-            handler: () => {
-              let amount = 1;
-              if (item.amount !== null) {
-                amount = item.amount;
-              }
-              if (found.amount === null) {
-                found.amount = 1;
-              }
-              found.amount += amount;
-              this.itemService.update(found.id, this.shoppingList, found);
-              this.toast.show(`Eintrag aktualisiert.`);
+            handler: async () => {
+              const found = elements.find(e => true); // get the first item
+              await this.updateItem(item, found);
             }
           }
         ]
       });
       alert.present();
     } else {
-      this.itemService.insert(this.shoppingList, item);
+      await this.itemService.push(item);
       this.toast.show(
         `${item.amount || ''} ${item.unit_name || ''} ${
           item.product_name
@@ -179,6 +164,28 @@ export class AddPage implements OnInit {
     this.product = null;
     this.unit = null;
     this.amount = null;
+  }
+
+  private async addNewItem(item: Item) {
+    await this.itemService.push(item);
+    this.toast.show(
+      `${item.amount || ''} ${item.unit_name || ''} ${
+        item.product_name
+      } hinzugefügt.`
+    );
+  }
+
+  private async updateItem(item: Item, toUpdate: Item) {
+    let amount = 1;
+    if (item.amount !== null) {
+      amount = item.amount;
+    }
+    if (toUpdate.amount === null) {
+      toUpdate.amount = 1;
+    }
+    toUpdate.amount += amount;
+    await this.itemService.update(toUpdate, toUpdate);
+    this.toast.show('Eintrag aktualisiert.');
   }
 
   searchProduct(name: string) {
@@ -194,8 +201,9 @@ export class AddPage implements OnInit {
     this.product = product.name;
   }
 
-  removeProduct(product: Product) {
-    this.reload(false, () => this.productService.destroy(product.name));
+  async removeProduct(product: Product) {
+    await this.productService.remove(product);
+    await this.reload(true, true);
   }
 
   async addProduct(name: string): Promise<void> {
@@ -213,16 +221,14 @@ export class AddPage implements OnInit {
           {
             text: 'Nein',
             role: 'cancel',
-            handler: () => {
-              this.reload();
-            }
+            handler: () => {}
           },
           {
             text: 'Ja, hinzufügen',
-            handler: () => {
-              this.productService.insert(name).then(() => {
-                this.toast.show(`${name} hinzugefügt.`);
-              });
+            handler: async () => {
+              await this.productService.push({ name } as Product);
+              await this.reload(true, true);
+              this.toast.show(`${name} hinzugefügt.`);
             }
           }
         ]

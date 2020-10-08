@@ -23,18 +23,16 @@ export class RegisterPage implements OnInit {
   ngOnInit() {}
 
   async register(): Promise<void> {
-    await this.registerService
-      .register(this.email, this.password, this.passwordConfirmation)
-      .subscribe(
-        () => {
-          this.toastService.show(
-            'Wir haben dir eine Bestätigungsmail zugesendet.'
-          );
-          this.nav.navigateForward(['login']);
-        },
-        err => {
-          this.toastService.showErrors(err);
-        }
+    try {
+      await this.registerService.register(
+        this.email,
+        this.password,
+        this.passwordConfirmation
       );
+      this.toastService.show('Wir haben dir eine Bestätigungsmail zugesendet.');
+      this.nav.navigateForward(['login']);
+    } catch (error) {
+      this.toastService.showErrors(error);
+    }
   }
 }

@@ -3,15 +3,16 @@ import { IonInput, AlertController } from '@ionic/angular';
 import { Router } from '@angular/router';
 import { Keyboard } from '@ionic-native/keyboard/ngx';
 import { StatusBar } from '@ionic-native/status-bar/ngx';
-
-import { ShoppingList } from 'src/app/services/database/shopping-lists/shopping-list';
-import { User } from './../user/user';
-import { UserService } from '../user/user.service';
-import { ShoppingListsService } from './shopping-lists.service';
-import { UtilHelperService } from 'src/app/services/util-helper.service';
-import { ShoppingListSharesService } from 'src/app/services/api/shopping-lists/shopping-list-shares.service';
+import { v4 as uuid, validate as validateUuid } from 'uuid';
 import { ToastService } from 'src/app/services/toast/toast.service';
-import { LoadingService } from 'src/app/services/loading.service';
+
+import { UserService } from '../user/user.service';
+import { User } from 'src/app/services/storage/user/user';
+
+import { ShoppingListSyncService } from './../../services/sync/shopping-list/shopping-list-sync.service';
+import { ShoppingListService } from './../../services/storage/shopping-list/shopping-list.service';
+import { ShoppingListShareService } from 'src/app/services/api/shopping-list/shopping-list-share.service';
+import { ShoppingList } from 'src/app/services/storage/shopping-list/shopping-list';
 
 @Component({
   selector: 'app-shopping-lists',
@@ -34,23 +35,23 @@ export class ShoppingListsPage implements OnInit {
 
   constructor(
     private userService: UserService,
-    private shoppingListsService: ShoppingListsService,
-    private shoppingListShareService: ShoppingListSharesService,
-    private utilHelper: UtilHelperService,
+    private shoppingListService: ShoppingListService,
+    private shoppingListSyncService: ShoppingListSyncService,
+    private shoppingListShareService: ShoppingListShareService,
     private toast: ToastService,
-    private loading: LoadingService,
     private keyboard: Keyboard,
     private ngZone: NgZone,
     private statusBar: StatusBar,
     private alertController: AlertController,
     private router: Router
-  ) {}
+  ) {
+    setTimeout(async () => {
+      await this.load(true);
+      setInterval(() => this.load(true), 30000);
+    }, 200);
+  }
 
   ngOnInit() {
-    setTimeout(() => {
-      this.load();
-    }, 200);
-
     this.statusBar.styleBlackOpaque();
     this.subscribeKeyboardEvents();
   }
@@ -73,6 +74,10 @@ export class ShoppingListsPage implements OnInit {
     });
   }
 
+  isUuid(id: number | string) {
+    return validateUuid(id.toString());
+  }
+
   itemOnSlide(slidingItem, $event) {
     // ratio > 0 == opening
     // ratio = 1 == opened
@@ -85,38 +90,31 @@ export class ShoppingListsPage implements OnInit {
   }
 
   closeSlidingItemIfOpen() {
-    if (this.slidingItemIsOpen()) {
-      this.slidingItem.close();
-      this.slidingItem = null;
-    }
-  }
-
-  slidingItemIsOpen(): boolean {
-    return !!this.slidingItem;
-  }
-
-  async load(forceSync: boolean = false, callback = null) {
-    this.loading.show();
-
-    if (callback !== null) {
-      callback();
+    if (!this.slidingItem) {
+      return;
     }
 
-    this.userService.show().then(user => {
-      this.user = user;
-    });
+    this.slidingItem.close();
+    this.slidingItem = null;
+  }
+
+  async load(sync = false, onlyPush = false) {
+    this.user = await this.userService.show();
+
     this.hasShoppingLists = true;
-    this.shoppingLists = await this.shoppingListsService.index(forceSync);
+    if (sync) {
+      await this.shoppingListSyncService.sync(onlyPush);
+    }
+    this.shoppingLists = await this.shoppingListService.get();
+
     if (!this.shoppingLists.length) {
       this.hasShoppingLists = false;
     }
-
-    this.loading.dismiss();
   }
 
-  reload(forceSync: boolean = false, callback = null, $event: any = null) {
+  async reload(sync = false, onlyPush = false, $event: any = null) {
     this.hideAllInputs();
-    this.load(forceSync, callback);
+    await this.load(sync, onlyPush);
     this.closeSlidingItemIfOpen();
 
     if ($event) {
@@ -138,9 +136,8 @@ export class ShoppingListsPage implements OnInit {
   }
 
   async delete(shoppingList: ShoppingList) {
-    this.reload(false, () =>
-      this.shoppingListsService.destroy(shoppingList.id)
-    );
+    await this.shoppingListService.remove(shoppingList);
+    this.reload(true, false);
   }
 
   hideAllInputs() {
@@ -165,18 +162,29 @@ export class ShoppingListsPage implements OnInit {
     this.closeSlidingItemIfOpen();
   }
 
-  add() {
-    this.name = this.utilHelper.parseAndTrim(this.name);
-    if (!this.name.length) {
+  async add() {
+    if (this.name) this.name = this.name.trim();
+
+    if (!this.name) {
       alert('Der Name fehlt!');
       setTimeout(() => {
         this.showAddInput();
       }, 500);
       return;
     }
-    const shoppingList = {} as ShoppingList;
-    shoppingList.name = this.name;
-    this.reload(false, () => this.shoppingListsService.insert(shoppingList));
+
+    const shoppingList: ShoppingList = {
+      id: uuid(),
+      name: this.name,
+      owner_email: this.user.email || null,
+      created_at: null,
+      updated_at: null,
+      deleted_at: null
+    };
+
+    await this.shoppingListService.push(shoppingList);
+
+    await this.reload(true, false);
   }
 
   showEditInput(shoppingList: ShoppingList) {
@@ -198,7 +206,7 @@ export class ShoppingListsPage implements OnInit {
     this.closeSlidingItemIfOpen();
   }
 
-  edit() {
+  async edit() {
     if (this.name.length) {
       this.name = this.name.trim();
     }
@@ -210,16 +218,18 @@ export class ShoppingListsPage implements OnInit {
       return;
     }
 
-    this.reload(false, () =>
-      this.shoppingListsService.update(this.editShoppingList.id, {
-        name: this.name
-      } as ShoppingList)
-    );
+    await this.shoppingListService.update(this.editShoppingList, {
+      ...this.editShoppingList,
+      name: this.name
+    });
+    this.reload(true, false);
   }
 
   async showShare(shoppingList: ShoppingList) {
-    if (!shoppingList.remote_id) {
-      this.toast.show('Nur Online-Einkaufslisten können geteilt werden.');
+    if (!shoppingList.id) {
+      this.toast.show(
+        'Nur Synchronisierte-Einkaufslisten können geteilt werden.'
+      );
       return;
     }
     const alert = await this.alertController.create({
@@ -235,25 +245,24 @@ export class ShoppingListsPage implements OnInit {
         {
           text: 'Abbrechen',
           role: 'cancel',
-          handler: data => {
-            this.reload();
-          }
+          handler: () => this.reload()
         },
         {
           text: 'Teilen',
-          handler: data => {
-            this.shoppingListShareService
-              .store(shoppingList.remote_id, data.email)
-              .toPromise()
-              .then(() => {
-                this.toast.show(
-                  `"${shoppingList.name}" erfolgreich mit ${data.email} geteilt.`
-                );
-                this.reload();
-              })
-              .catch(err => {
-                this.toast.showErrors(err);
-              });
+          handler: async data => {
+            try {
+              await this.shoppingListShareService.store(
+                +shoppingList.id,
+                data.email
+              );
+
+              const text = `"${shoppingList.name}" erfolgreich mit ${data.email} geteilt.`;
+              this.toast.show(text);
+
+              await this.reload(true, false);
+            } catch (error) {
+              this.toast.showErrors(error);
+            }
           }
         }
       ]
@@ -268,16 +277,13 @@ export class ShoppingListsPage implements OnInit {
         {
           text: 'Abbrechen',
           role: 'cancel',
-          handler: () => {
-            this.reload();
-          }
+          handler: () => this.reload()
         },
         {
           text: 'Bestätigen',
-          handler: () => {
-            this.shoppingListsService.destroy(shoppingList.id).then(() => {
-              this.reload();
-            });
+          handler: async () => {
+            await this.shoppingListService.remove(shoppingList);
+            this.reload(true, false);
           }
         }
       ]

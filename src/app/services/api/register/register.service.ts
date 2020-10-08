@@ -1,5 +1,4 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
 
 import { ApiService } from '../api.service';
 
@@ -7,7 +6,7 @@ import { ApiService } from '../api.service';
   providedIn: 'root'
 })
 export class RegisterService {
-  private prefix = '/auth/register';
+  private prefix = 'auth/register';
 
   constructor(private api: ApiService) {}
 
@@ -15,7 +14,7 @@ export class RegisterService {
     email: string,
     password: string,
     passwordConfirmation: string
-  ): Observable<any> {
+  ): Promise<any> {
     return this.api.post(`${this.prefix}`, {
       email,
       password,
@@ -23,7 +22,7 @@ export class RegisterService {
     });
   }
 
-  resend(): Observable<any> {
+  resend(): Promise<any> {
     return this.api.post<any>(`${this.prefix}/resend`);
   }
 }

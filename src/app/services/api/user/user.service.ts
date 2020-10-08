@@ -1,22 +1,21 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
 
 import { ApiService } from '../api.service';
-import { User } from './user';
+import { User } from './../../storage/user/user';
 
 @Injectable({
   providedIn: 'root'
 })
 export class UserService {
-  private prefix = '/user';
+  private prefix = 'user';
 
   constructor(private api: ApiService) {}
 
-  show(): Observable<User[]> {
+  show(): Promise<User[]> {
     return this.api.get<User[]>(this.prefix);
   }
 
-  update(user: User): Observable<User[]> {
+  update(user: User): Promise<User[]> {
     return this.api.patch<User[]>(this.prefix, user);
   }
 }

@@ -1,7 +1,7 @@
-import { User } from './user';
 import { Injectable } from '@angular/core';
 
 import { UserService as StorageUserService } from '../../services/storage/user/user.service';
+import { User } from 'src/app/services/storage/user/user';
 import { TokenService } from 'src/app/services/storage/token/token.service';
 import { LoginService } from 'src/app/services/api/login/login.service';
 import { OfflineModeService } from 'src/app/services/storage/offline-mode/offline-mode.service';

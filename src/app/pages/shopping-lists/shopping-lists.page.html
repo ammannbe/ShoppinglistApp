@@ -15,7 +15,7 @@
 </ion-header>
 
 <ion-content (click)="closeSlidingItemIfOpen()">
-  <ion-refresher slot="fixed" (ionRefresh)="reload(true, null, $event)">
+  <ion-refresher slot="fixed" (ionRefresh)="reload(true, false, $event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
 
@@ -52,6 +52,7 @@
         <ion-item-sliding #item (ionDrag)="itemOnSlide(item, $event)">
           <ion-item (click)="open(i)">
             <ion-label class="ion-text-wrap">
+              <span style="color: red" *ngIf="isUuid(i?.id) || i?.deleted_at">&bull;</span>
               {{ i.name }}
               <br />
               <small *ngIf="user?.email !== i.owner_email">
@@ -60,7 +61,11 @@
             </ion-label>
           </ion-item>
           <ion-item-options *ngIf="user?.email === i.owner_email" side="end">
-            <ion-item-option color="secondary" (click)="showShare(i)">
+            <ion-item-option
+              *ngIf="!isUuid(i?.id)"
+              color="secondary"
+              (click)="showShare(i)"
+            >
               <ion-icon name="person-add"></ion-icon>
             </ion-item-option>
             <ion-item-option color="primary" (click)="showEditInput(i)">

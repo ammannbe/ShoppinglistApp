@@ -1,8 +1,5 @@
 import { Injectable } from '@angular/core';
 import { HttpHeaders, HttpClient } from '@angular/common/http';
-import { switchMap } from 'rxjs/operators';
-import { Observable } from 'rxjs';
-import { from } from 'rxjs';
 
 import { TokenService } from '../storage/token/token.service';
 
@@ -34,60 +31,49 @@ export class ApiService {
       'Content-Type': 'application/json; charset=utf-8'
     });
 
-    console.log('HTTP: Query token for header...');
     const token = await this.tokenService.get();
     if (token) {
-      console.log(`HTTP: Set token in Authorization header: ${token}`);
+      console.log(`HTTP:    Set token in Authorization header: ${token}`);
       headers = headers.set('Authorization', `Bearer ${token}`);
     }
     return headers;
   }
 
-  get<T>(url: string): Observable<any> {
-    console.log(`HTTP: GET    ${url}`);
-    return from(this.queryHeaders()).pipe(
-      switchMap(headers => {
-        return this.http.get<T>(this.HOST + url, { headers });
-      })
-    );
+  async get<T>(url: string): Promise<any> {
+    console.log(`HTTP:    GET    ${url}`);
+    const options = { headers: await this.queryHeaders() };
+    url = `${this.HOST}/${url}`;
+    return this.http.get<T>(url, options).toPromise();
   }
 
-  post<T>(url: string, data: object = {}): Observable<T> {
-    console.log(`HTTP: POST   ${url}`);
+  async post<T>(url: string, data: object = {}): Promise<T> {
+    console.log(`HTTP:    POST   ${url}`);
     console.log(`      ${JSON.stringify(data)}`);
-    return from(this.queryHeaders()).pipe(
-      switchMap(headers => {
-        return this.http.post<T>(this.HOST + url, data, { headers });
-      })
-    );
+    const options = { headers: await this.queryHeaders() };
+    url = `${this.HOST}/${url}`;
+    return this.http.post<T>(url, data, options).toPromise();
   }
 
-  patch<T>(url: string, data?: object): Observable<T> {
-    console.log(`HTTP: PATCH  ${url}`);
+  async patch<T>(url: string, data?: object): Promise<T> {
+    console.log(`HTTP:    PATCH  ${url}`);
     console.log(`      ${JSON.stringify(data)}`);
-    return from(this.queryHeaders()).pipe(
-      switchMap(headers => {
-        return this.http.patch<T>(this.HOST + url, data, { headers });
-      })
-    );
+    const options = { headers: await this.queryHeaders() };
+    url = `${this.HOST}/${url}`;
+    return this.http.patch<T>(url, data, options).toPromise();
   }
 
-  put<T>(url: string, data?: object): Observable<T> {
-    console.log(`HTTP: PUT    ${url}`);
+  async put<T>(url: string, data?: object): Promise<T> {
+    console.log(`HTTP:    PUT    ${url}`);
     console.log(`      ${JSON.stringify(data)}`);
-    return from(this.queryHeaders()).pipe(
-      switchMap(headers => {
-        return this.http.put<T>(this.HOST + url, data, { headers });
-      })
-    );
+    const options = { headers: await this.queryHeaders() };
+    url = `${this.HOST}/${url}`;
+    return this.http.put<T>(url, data, options).toPromise();
   }
 
-  delete<T>(url: string): Observable<T> {
-    console.log(`HTTP: DELETE ${url}`);
-    return from(this.queryHeaders()).pipe(
-      switchMap(headers => {
-        return this.http.delete<T>(this.HOST + url, { headers });
-      })
-    );
+  async delete<T>(url: string): Promise<T> {
+    console.log(`HTTP:    DELETE ${url}`);
+    const options = { headers: await this.queryHeaders() };
+    url = `${this.HOST}/${url}`;
+    return this.http.delete<T>(url, options).toPromise();
   }
 }

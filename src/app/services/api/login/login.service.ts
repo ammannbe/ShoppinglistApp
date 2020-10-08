@@ -8,7 +8,7 @@ import { TokenService } from '../../storage/token/token.service';
   providedIn: 'root'
 })
 export class LoginService {
-  private prefix = '/auth';
+  private prefix = 'auth';
 
   constructor(
     private apiService: ApiService,
@@ -19,19 +19,20 @@ export class LoginService {
   async login(email: string, password: string): Promise<void> {
     await this.logout();
 
-    const token = await this.apiService
-      .post<{ token: string }>(`${this.prefix}/token`, {
+    const token = await this.apiService.post<{ token: string }>(
+      `${this.prefix}/token`,
+      {
         email,
         password,
         device_name: this.device.model
-      })
-      .toPromise();
+      }
+    );
     await this.tokenService.set(token);
   }
 
   async logout(): Promise<void> {
     try {
-      await this.apiService.delete(`${this.prefix}/token`).toPromise();
+      await this.apiService.delete(`${this.prefix}/token`);
     } catch (error) {}
 
     await this.tokenService.remove();

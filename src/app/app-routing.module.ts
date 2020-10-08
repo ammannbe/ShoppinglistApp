@@ -39,19 +39,6 @@ const routes: Routes = [
   {
     path: 'items/:id/edit',
     loadChildren: './pages/items/edit/edit.module#EditPageModule'
-  },
-  {
-    path: 'user',
-    children: [
-      {
-        path: '',
-        loadChildren: './pages/user/user.module#UserPageModule'
-      },
-      {
-        path: 'edit',
-        loadChildren: './pages/user/edit/edit.module#EditPageModule'
-      }
-    ]
   }
 ];
 

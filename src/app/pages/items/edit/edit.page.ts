@@ -1,17 +1,23 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
-
-import { ItemsService } from '../items.service';
-import { ShoppingListsService } from '../../shopping-lists/shopping-lists.service';
-import { ShoppingList } from 'src/app/services/database/shopping-lists/shopping-list';
-import { Item } from 'src/app/services/database/items/item';
-import { ToastService } from 'src/app/services/toast/toast.service';
-import { ProductsService } from '../../products/products.service';
-import { Product } from '../../products/product';
-import { UtilHelperService } from 'src/app/services/util-helper.service';
 import { IonInput } from '@ionic/angular';
-import { UnitsService } from '../../units/units.service';
-import { Unit } from 'src/app/services/database/units/unit';
+import { ActivatedRoute, Router } from '@angular/router';
+import { v4 as uuid, validate as isUuid } from 'uuid';
+
+import { UnitService } from 'src/app/services/storage/unit/unit.service';
+import { UnitSyncService } from 'src/app/services/sync/unit/unit-sync.service';
+import { Unit } from 'src/app/services/storage/unit/unit';
+
+import { Item } from 'src/app/services/storage/item/item';
+import { ItemService } from 'src/app/services/storage/item/item.service';
+
+import { ShoppingListService } from 'src/app/services/storage/shopping-list/shopping-list.service';
+import { ShoppingList } from 'src/app/services/storage/shopping-list/shopping-list';
+
+import { ProductService } from 'src/app/services/storage/product/product.service';
+import { ProductSyncService } from 'src/app/services/sync/product/product-sync.service';
+import { Product } from 'src/app/services/storage/product/product';
+
+import { ToastService } from 'src/app/services/toast/toast.service';
 
 @Component({
   selector: 'app-edit',
@@ -31,34 +37,41 @@ export class EditPage implements OnInit {
   public units: Unit[];
 
   constructor(
-    private itemService: ItemsService,
-    private unitService: UnitsService,
-    private shoppingListService: ShoppingListsService,
-    private productService: ProductsService,
+    private itemService: ItemService,
+    private unitService: UnitService,
+    private unitSyncService: UnitSyncService,
+    private shoppingListService: ShoppingListService,
+    private productService: ProductService,
+    private productSyncService: ProductSyncService,
     private toast: ToastService,
-    private utilHelper: UtilHelperService,
     private activatedRoute: ActivatedRoute,
     private router: Router
   ) {
     setTimeout(() => {
-      this.activatedRoute.paramMap.subscribe(paramMap => {
+      this.activatedRoute.paramMap.subscribe(async paramMap => {
         if (!paramMap.has('id')) {
           this.router.navigate(['/shopping-lists']);
           return;
         }
-        this.itemService.find(+paramMap.get('id')).then(item => {
-          this.item = item;
-          this.amount = this.item.amount;
-          this.unit = this.item.unit_name;
-          this.product = this.item.product_name;
 
-          this.shoppingListService
-            .find(item.shopping_list_id)
-            .then(shoppingList => {
-              this.shoppingList = shoppingList;
-              this.load();
-            });
-        });
+        let id: string | number;
+        if (isUuid(paramMap.get('id'))) {
+          id = paramMap.get('id');
+        } else {
+          id = +paramMap.get('id');
+        }
+
+        this.item = await this.itemService.find(id);
+        this.amount = this.item.amount;
+        this.unit = this.item.unit_name;
+        this.product = this.item.product_name;
+
+        this.shoppingList = await this.shoppingListService.find(
+          this.item.shopping_list_id
+        );
+        await this.load(true);
+
+        setInterval(() => this.load(true), 30000);
       });
     }, 200);
   }
@@ -69,34 +82,46 @@ export class EditPage implements OnInit {
     }, 200);
   }
 
-  load(forceSync: boolean = false) {
-    this.unitService.index(forceSync).then(units => {
-      this.units = this.utilHelper.sort(units);
-    });
-    this.productService.index(forceSync).then(products => {
-      this.productsSearch = this.products = this.utilHelper.sort(products);
-    });
+  async load(sync = false, onlyPush = false) {
+    if (sync) {
+      await this.unitSyncService.sync(onlyPush);
+      await this.productSyncService.sync(onlyPush);
+    }
+
+    this.products = (await this.productService.get()).sort((a, b) =>
+      a.name.localeCompare(b.name)
+    );
+    this.productsSearch = this.products;
+    this.units = (await this.unitService.get()).sort((a, b) =>
+      a.name.localeCompare(b.name)
+    );
   }
 
-  reload($event: any = null, forceSync: boolean = false) {
-    this.load();
+  async reload(sync = false, onlyPush = false, $event: any = null) {
+    await this.load(sync, onlyPush);
+
     if ($event) {
       $event.target.complete();
     }
   }
 
   async edit() {
-    this.item.product_name = this.utilHelper.parseAndTrim(this.product);
-    this.item.unit_name = this.utilHelper.parseAndTrim(this.unit);
+    if (this.product) this.product = this.product.trim();
+    if (this.unit) this.unit = this.unit.trim();
 
-    if (!this.product.length) {
+    if (!this.product) {
       alert('Das Produkt fehlt!');
       return;
     }
-    this.item.product_name = this.product;
-    this.item.amount = this.amount;
 
-    await this.itemService.update(this.item.id, this.shoppingList, this.item);
+    this.item = {
+      ...this.item,
+      product_name: this.product,
+      unit_name: this.unit,
+      amount: this.amount
+    };
+
+    await this.itemService.update(this.item, this.item);
     this.toast.show(
       `${this.item.amount || ''} ${this.item.unit_name || ''} ${
         this.item.product_name
@@ -106,9 +131,11 @@ export class EditPage implements OnInit {
   }
 
   searchProduct(name: string) {
-    if (!name.length) {
+    name = name.trim();
+    if (!name) {
       this.productsSearch = this.products;
     }
+
     this.productsSearch = this.products.filter(product => {
       return product.name.toLowerCase().includes(name.toLowerCase());
     });
@@ -118,8 +145,8 @@ export class EditPage implements OnInit {
     this.product = product.name;
   }
 
-  removeProduct(product: Product) {
-    this.productService.destroy(product.name);
-    this.reload();
+  async removeProduct(product: Product) {
+    await this.productService.remove(product);
+    this.reload(true, false);
   }
 }
