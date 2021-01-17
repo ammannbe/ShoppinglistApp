@@ -57,7 +57,7 @@ export class ItemsPage implements OnInit {
     }, 500);
   }
 
-  ngOnInit() {}
+  ngOnInit() { }
 
   public isUuid(value: any) {
     return validateUuid(value);
@@ -169,7 +169,9 @@ export class ItemsPage implements OnInit {
     }
 
     await this.itemService.batchRemove(items);
-    await this.reload(true);
+    setTimeout(async () => {
+      await this.reload(true);
+    }, 200);
   }
 
   async removeConfirmation(items: Item[]): Promise<boolean> {

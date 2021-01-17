@@ -70,7 +70,15 @@ export class ItemSyncService extends SyncService {
   protected async destroyRemoteItem(item: Item): Promise<void> {
     if (!isUuid(item.id.toString())) {
       this.remoteChanges = true;
-      await this.apiItemService.destroy(item.id);
+      try {
+        await this.apiItemService.destroy(item.id);
+      } catch (error) {
+        if (error.status === 404) {
+          return;
+        }
+
+        throw error;
+      }
     }
   }
 

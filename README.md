@@ -45,7 +45,7 @@ With both methods you'll get an APK, which you can upload to the google play sto
 ./build-apk.sh
 ```
 
-### Manuell
+### Manually
 
 - Build APK
 
@@ -67,7 +67,7 @@ jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore Shoppinglist-re
 
 - Optimize APK with the `zipalign`-utility
 
-Existiert im Ordner `$HOME/Android/Sdk/build-tools/[VERSION]/zipalign`
+Exists in folder `$HOME/Android/Sdk/build-tools/[VERSION]/zipalign`
 
 ```bash
 $version="28.0.3"
