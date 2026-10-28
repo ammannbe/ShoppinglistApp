@@ -1,3 +1,10 @@
+# 🚨 Complete Rewrite
+
+The repository was therefore moved to:
+[https://github.com/ammannbe/Shoppinglist](https://github.com/ammannbe/Shoppinglist)
+
+---
+
 # Shoppinglist App
 
 Mobile application to manage your shopping lists, written with Ionic, Cordova and TypeScript.
